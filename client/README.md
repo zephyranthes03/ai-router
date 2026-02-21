@@ -6,7 +6,7 @@ Core responsibilities:
 
 - On-device PII detection and masking (Regex + Presidio)
 - Adaptive routing metadata generation
-- Optional 0G inference signal injection
+- Optional 0G inference signal injection (with complexity-to-tier adjustment)
 - x402 paid request execution via wallet integration
 - Billing and ZK proof submission UX
 
@@ -97,6 +97,12 @@ DEV=1 python main.py
 5. Server `/route` call for provider recommendation
 6. Fallback router when server route is unavailable
 
+When 0G inference is enabled, orchestrator applies complexity-aware tier adjustment:
+
+- `complexity=complex` + `tier=standard` -> `tier=premium`
+- `complexity=simple` + `tier=standard` -> `tier=budget`
+- other tiers remain unchanged
+
 Key files:
 
 - `app/orchestrator.py`
@@ -117,11 +123,14 @@ Main settings exposed via `/settings`:
 
 0G inference is off by default and is used only when enabled with a valid API key.
 
+Complexity-aware tier adjustment is only applied when a valid 0G classification is returned.
+
 ## Wallet and Payment Notes
 
 - Browser mode: injected wallet (wagmi) is supported
 - Desktop/local mode: encrypted embedded-wallet keystore is supported
 - Paid requests are validated by the gateway x402 middleware
+- x402 v2 header handshake is supported end-to-end (`PAYMENT-REQUIRED` -> `PAYMENT-SIGNATURE` -> `PAYMENT-RESPONSE`)
 
 Related files:
 

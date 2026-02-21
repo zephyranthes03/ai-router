@@ -10,7 +10,7 @@ Status snapshot date: **2026-02-21**.
 | Kite requirement | Status | Evidence / Notes |
 |---|---|---|
 | Build on Kite AI testnet/mainnet | In progress | Current live flow is Base Sepolia. Same x402 architecture is ready to run with a Kite network profile. |
-| Use x402-style payment flows | Implemented | `server/src/middleware/x402.ts`, `client/frontend/src/lib/x402Client.ts` |
+| Use x402-style payment flows | Implemented (x402 v2 header flow) | `server/src/middleware/x402.ts`, `server/src/index.ts`, `server/scripts/headless-demo.ts` |
 | Verifiable agent identity (wallet/credential) | Implemented (wallet-based) | EIP-712 signed payment auth + settlement tx hash capture + proof binding |
 | Autonomous execution (no manual wallet clicking) | Implemented (headless path) | `server/scripts/headless-demo.ts` |
 | Open-source core components (MIT/Apache) | Implemented | `LICENSE` (MIT) |
@@ -58,6 +58,7 @@ Required env: `HEADLESS_PRIVATE_KEY` in `server/.env`.
 |---|---|---|
 | Inference integration (mainnet/testnet endpoint) | Implemented | `client/app/llm/zero_g.py`, `client/app/orchestrator.py` |
 | App workflow integration (not single prompt) | Implemented | `client/app/api/routes/analyze.py`, adaptive routing flow |
+| Complexity-aware tier adaptation | Implemented | `client/app/orchestrator.py` (`complex: standard->premium`, `simple: standard->budget`) |
 | Reproducible setup and docs | Implemented | `docs/BOUNTY-0G-Labs-Best-Use-of-AI-Inference-or-Fine-Tuning-0G-Compute.md` |
 | Fine-tuning workflow | Not claimed | Explicitly out of scope in current version |
 
@@ -68,7 +69,9 @@ Required env: `HEADLESS_PRIVATE_KEY` in `server/.env`.
 | Area | Key files |
 |---|---|
 | x402 server middleware and settlement hook | `server/src/middleware/x402.ts` |
+| x402 v2 header exposure/flow | `server/src/index.ts`, `server/scripts/headless-demo.ts` |
 | Adaptive routing selection | `server/src/routing/select-provider.ts` |
+| 0G complexity-to-tier auto-adjust | `client/app/orchestrator.py` |
 | Paid client request path | `client/frontend/src/lib/x402Client.ts` |
 | Autonomous headless payment demo | `server/scripts/headless-demo.ts` |
 | ZK circuit | `circuits/circuits/usage_budget.circom` |

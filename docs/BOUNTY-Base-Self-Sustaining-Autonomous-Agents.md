@@ -32,7 +32,7 @@ The result is a self-sustaining flow where decisions, payments, and accountabili
 
 ## Why This Fits Base Autonomous Agents
 
-- **Autonomous decision step**: Adaptive orchestration chooses provider/tier by domain, speed-quality preference, and capability needs
+- **Autonomous decision step**: Adaptive orchestration chooses provider/tier by domain, speed-quality preference, and capability needs, with 0G complexity-aware standard-tier adjustment (`complex -> premium`, `simple -> budget`)
 - **Autonomous payment step**: x402 gates each request with USDC settlement on Base Sepolia
 - **Autonomous verification step**: usage commitments are proven (Groth16) and finalized on-chain
 - **Composable state**: verified proof records can be read by other apps/agents as trust anchors

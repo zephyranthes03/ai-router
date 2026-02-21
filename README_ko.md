@@ -33,7 +33,7 @@ ProofRoute AI는 민감한 AI 질의를 **로컬에서 보호**하고, 비용은
 ## 1) What We Built
 
 - **Edge AI privacy layer**: Regex + Presidio + 로컬 LLM 기반의 디바이스 내 다중 신호 PII 보호, 클라우드 전송 전 플레이스홀더 마스킹 + 응답 후 안전 복원으로 UX 유지
-- **Adaptive AI orchestration**: Anthropic / OpenAI / DeepSeek / Gemini를 대상으로, tier·속도/품질 선호·도메인 적합도·필수 capability(extended thinking/web search/context)에 따라 실시간으로 모델을 선택해 정적 라우팅보다 품질 대비 비용 효율을 최적화
+- **Adaptive AI orchestration**: Anthropic / OpenAI / DeepSeek / Gemini를 대상으로, tier·속도/품질 선호·도메인 적합도·필수 capability(extended thinking/web search/context)에 따라 실시간으로 모델을 선택하고, 0G complexity 신호로 tier를 자동 보정(`complex`면 `standard -> premium`, `simple`이면 `standard -> budget`)해 품질 대비 비용 효율을 최적화
 - **x402 micropayments**: Base Sepolia USDC 기반 요청 단위 결제/정산
 - **ZK accountability**: 사용량 + x402 tx hash root를 함께 증명(Groth16)하고 온체인에서 검증
 - **Billing observability**: 요청/토큰/비용을 투명하게 추적하고 대시보드로 가시화
@@ -48,7 +48,7 @@ ProofRoute AI는 민감한 AI 질의를 **로컬에서 보호**하고, 비용은
 ProofRoute AI의 접근:
 - **내용은 숨기고**: 원문은 로컬에서 처리하고 마스킹된 정보만 전송
 - **요금은 사용한 만큼만**: x402 USDC 마이크로결제로 구독료 없이 요청 단위 pay-as-you-go
-- **모델 선택은 상황에 맞게**: Adaptive AI orchestration이 tier, 속도/품질 선호, 도메인, capability를 반영해 성능 대비 비용을 최적화
+- **모델 선택은 상황에 맞게**: Adaptive AI orchestration이 tier, 속도/품질 선호, 도메인, capability를 반영하고 0G complexity 기반 tier 자동 보정까지 적용해 성능 대비 비용을 최적화
 - **사용 책임은 증명**: ZK 증명과 온체인 검증으로 결과를 검증 가능하게 유지
 
 즉, "감시 없는 투명성"과 "낭비 없는 AI 비용 구조"를 함께 목표로 합니다.
@@ -258,6 +258,16 @@ UI에서 비용 제어는 `tier` 선택으로 표현됩니다.
 - 비용 절약 중심 모드 -> `budget`
 - 품질 우선/비용 제약 완화 모드 -> `standard` 또는 `premium`
 
+### 0G Complexity 기반 Tier 자동 보정 (구현됨)
+
+0G inference가 켜진 상태에서 `/route` 호출 전 오케스트레이터가 tier를 자동 조정합니다:
+
+| 기본 tier | 0G complexity | 적용 tier |
+|---|---|---|
+| `standard` | `complex` | `premium` |
+| `standard` | `simple` | `budget` |
+| `budget` / `premium` | any | 변경 없음 |
+
 ### ZK tx-binding 시나리오
 
 | 시나리오 | 검증 내용 |
@@ -267,6 +277,14 @@ UI에서 비용 제어는 `tier` 선택으로 표현됩니다.
 | commitment 무결성 | `Poseidon(totalCost, requestCount, txHashesRoot, salt)` 계산식 일치 |
 | 온체인 저장/이벤트 | `ProofRegistry`가 `txHashesRoot`를 저장하고 `ProofVerified` 이벤트에 포함 |
 | Groth16 호환성 | `pubSignals[4]` 기준 실제 proof 생성/검증 통과 |
+
+### x402 v2 결제 핸드셰이크
+
+게이트웨이와 헤드리스 경로는 x402 v2 헤더 흐름으로 동작합니다:
+
+1. 초기 요청에서 `402` + `PAYMENT-REQUIRED` 반환
+2. 클라이언트가 서명 후 `PAYMENT-SIGNATURE`로 재요청
+3. 정산 메타데이터를 `PAYMENT-RESPONSE`로 수신
 
 ---
 
@@ -289,9 +307,11 @@ UI에서 비용 제어는 `tier` 선택으로 표현됩니다.
 ## 10) Status
 
 - x402 결제 및 라우팅 파이프라인 동작
+- x402 v2 헤더 기반 결제 플로우 동작 (`PAYMENT-REQUIRED` / `PAYMENT-SIGNATURE` / `PAYMENT-RESPONSE`)
 - ZK 회로/증명 생성 파이프라인 동작
 - `ProofRegistry` 온체인 검증 테스트 통과
 - `tier + speed_quality_weight` 라우팅 시나리오 테스트 통과
+- 0G complexity 기반 tier 자동 보정 동작 (`standard -> premium|budget`)
 - 프런트엔드에서 proof 생성/제출 UI 연동
 - 헤드리스 자율 x402 데모 스크립트 제공 (`server/scripts/headless-demo.ts`)
 - Base Autonomous Agents의 strict-mainnet 요구사항은 후속 작업으로 관리 중 (현재 데모 체인은 Base Sepolia)

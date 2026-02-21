@@ -172,7 +172,7 @@ export default function Dashboard({ onSettingsChange }: DashboardProps) {
 
             {/* 0G Inference */}
             <div className="border-t border-gray-700 pt-4 mt-2">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-gray-200">0G Compute Inference</span>
                 <CheckboxToggle
                   checked={settings.use_0g_inference}
@@ -183,15 +183,31 @@ export default function Dashboard({ onSettingsChange }: DashboardProps) {
                   }}
                 />
               </div>
+              <p className="text-xs text-gray-500 mb-3">
+                AI-powered smart routing via OpenAI-compatible inference (e.g. Together AI).
+                Classifies domain, complexity, and thinking needs — complexity auto-adjusts tier.
+              </p>
               {settings.use_0g_inference && (
                 <div className="space-y-2">
                   <SettingRow label="API Key">
                     <input
                       type="password"
                       value={settings.zero_g_api_key}
-                      placeholder="0G API key"
+                      placeholder="Together AI key (tgp_v1_…)"
                       onChange={async (e) => {
                         const updated = await updateSettings({ zero_g_api_key: e.target.value });
+                        setSettings(updated);
+                      }}
+                      className="w-48 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm font-mono focus:outline-none focus:border-blue-500"
+                    />
+                  </SettingRow>
+                  <SettingRow label="Base URL">
+                    <input
+                      type="text"
+                      value={settings.zero_g_base_url}
+                      placeholder="https://api.together.xyz/v1"
+                      onChange={async (e) => {
+                        const updated = await updateSettings({ zero_g_base_url: e.target.value });
                         setSettings(updated);
                       }}
                       className="w-48 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm font-mono focus:outline-none focus:border-blue-500"
@@ -201,6 +217,7 @@ export default function Dashboard({ onSettingsChange }: DashboardProps) {
                     <input
                       type="text"
                       value={settings.zero_g_model}
+                      placeholder="meta-llama/Llama-3.3-70B-Instruct-Turbo"
                       onChange={async (e) => {
                         const updated = await updateSettings({ zero_g_model: e.target.value });
                         setSettings(updated);

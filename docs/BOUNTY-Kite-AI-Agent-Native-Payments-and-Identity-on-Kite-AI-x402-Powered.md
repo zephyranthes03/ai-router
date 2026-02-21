@@ -13,7 +13,7 @@ AI API billing today is opaque: monthly subscriptions or prepaid credits with no
 | Kite AI requirement | Status | Evidence / Notes |
 |---|---|---|
 | Build on Kite AI Testnet/mainnet | In progress | Current live flow is on Base Sepolia. Network profile migration to Kite testnet/mainnet is tracked as the next deployment step. |
-| Use x402-style payment flows | Implemented | `server/src/middleware/x402.ts`, `client/frontend/src/lib/x402Client.ts` |
+| Use x402-style payment flows | Implemented (x402 v2 header flow) | `server/src/middleware/x402.ts`, `client/frontend/src/lib/x402Client.ts`, `server/scripts/headless-demo.ts` |
 | Implement verifiable agent identity (wallet or credentials) | Implemented (wallet-based) | Wallet-signed payment authorization + settlement tx hash binding in proof data |
 | Demonstrate autonomous execution (no manual wallet clicking) | Implemented (headless path) | `server/scripts/headless-demo.ts` |
 | Open-source core components (MIT / Apache) | Implemented | Repository license is MIT (`LICENSE`) |
@@ -21,7 +21,7 @@ AI API billing today is opaque: monthly subscriptions or prepaid credits with no
 ## Why this fits Kite AI
 
 - **x402-native request flow**: Each routed AI call is gated by HTTP 402 and settled per request.
-- **Adaptive agent orchestration**: Model/provider is chosen dynamically by task profile (tier/speed-quality/domain/capability), then only that path is paid.
+- **Adaptive agent orchestration**: Model/provider is chosen dynamically by task profile (tier/speed-quality/domain/capability), including 0G complexity-aware tier adjustment (`standard -> premium|budget`).
 - **Verifiable identity/accountability linkage**: Wallet-level settlement tx hashes are captured server-side and bound into ZK commitments.
 - **No subscription lock-in**: Pay-as-you-go economics align with real usage for agent workloads.
 
@@ -39,6 +39,16 @@ Each AI provider endpoint has a dynamic USDC price set in the x402 route configu
 | Claude Sonnet | Premium | $0.010 |
 
 The `x402ResourceServer` middleware intercepts each request, verifies payment, and settles before the AI response is delivered.
+
+### x402 v2 Handshake
+
+Current flow uses x402 v2-compatible headers:
+
+1. `402` response with `PAYMENT-REQUIRED`
+2. signed retry with `PAYMENT-SIGNATURE`
+3. settlement receipt via `PAYMENT-RESPONSE`
+
+The headless demo (`server/scripts/headless-demo.ts`) implements this flow end-to-end.
 
 ### Settlement Transaction Capture
 

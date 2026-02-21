@@ -17,6 +17,11 @@
 
 This is an end-to-end workflow where 0G output changes provider/tier behavior, not a standalone prompt demo.
 
+Implemented tier-adjustment policy in orchestrator:
+
+- `complexity=complex` + `tier=standard` -> `tier=premium`
+- `complexity=simple` + `tier=standard` -> `tier=budget`
+
 ### 3) Provide a working demo + reproducible setup instructions
 
 Repro steps are documented and runnable:
@@ -64,6 +69,7 @@ For agentic workflows, routing decisions should come from live inference, not on
 - The model returns structured routing signals:
   `domain`, `complexity`, `requires_web_search`, `requires_thinking`, `confidence`
 - These signals are injected into routing metadata and influence final provider/tier selection
+- Complexity-aware tier adjustment is applied before `/route` (`standard -> premium|budget` on `complex|simple`)
 - If 0G is unavailable, routing gracefully falls back to local keyword classification
 
 This gives us adaptive routing quality without breaking reliability.
@@ -85,8 +91,9 @@ This gives us adaptive routing quality without breaking reliability.
 2. Orchestrator calls `POST {zero_g_base_url}/chat/completions` with a JSON-only classification prompt.
 3. 0G response is parsed into `ZeroGClassification`.
 4. Routing metadata is updated with 0G signals.
-5. Gateway selects provider and executes x402-gated inference.
-6. If 0G call fails/timeouts, local fallback classification is used automatically.
+5. If base tier is `standard`, complexity can auto-adjust to `premium` (`complex`) or `budget` (`simple`).
+6. Gateway selects provider and executes x402-gated inference.
+7. If 0G call fails/timeouts, local fallback classification is used automatically.
 
 ## Why This Fits 0G Compute
 
@@ -105,7 +112,8 @@ Fine-tuning-specific claims are out of scope unless a fine-tune pipeline is actu
 1. Turn on `0G Compute Inference` in Dashboard settings.
 2. Send the same prompt with 0G off/on.
 3. Compare `/analyze` outputs (`zero_g` field) and selected providers.
-4. Show that failure handling still routes correctly via local fallback.
+4. Show standard-tier auto-adjust (`complex -> premium`, `simple -> budget`).
+5. Show that failure handling still routes correctly via local fallback.
 
 ## Links
 

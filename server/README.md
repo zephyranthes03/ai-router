@@ -129,6 +129,16 @@ Note: in normal mode, this endpoint is payment-gated by x402 and returns `402` f
 4. `onAfterSettle` patches the latest usage record with settlement `txHash`.
 5. `/proof/generate` derives `txHashesRoot` from server-side records and returns proof/calldata.
 
+### x402 v2 Header Flow
+
+The gateway is configured for x402 v2-compatible header flow:
+
+1. First paid call returns `402` with `PAYMENT-REQUIRED`.
+2. Client retries with signed `PAYMENT-SIGNATURE`.
+3. Settlement result is exposed via `PAYMENT-RESPONSE` (and compatibility header variants).
+
+`server/src/index.ts` exposes these headers through CORS so browser clients can read them.
+
 Key implementation:
 
 - `src/middleware/x402.ts`

@@ -223,6 +223,16 @@ Note:
 
 - if x402 initialization fails, the server can continue in a warning/dev mode without active payment verification.
 
+### x402 v2 header flow
+
+Current integration is x402 v2-compatible:
+
+1. paid endpoint returns `402` + `PAYMENT-REQUIRED`
+2. client retries with `PAYMENT-SIGNATURE`
+3. settlement metadata is readable via `PAYMENT-RESPONSE`
+
+`server/src/index.ts` exposes these headers via CORS for browser clients.
+
 ## ZK Usage Path
 
 Relevant files:
@@ -237,6 +247,15 @@ Summary:
 - usage records persist in `server/data/usage-records.json`
 - batch size is 32 (aligned with circuit constraints)
 - after successful proof generation, processed batch entries are dequeued
+
+## Complexity-to-Tier Rule (Client Orchestrator)
+
+Tier auto-adjustment from 0G complexity is performed in the client orchestrator, then sent to this server via `/route`:
+
+- `complexity=complex` + `tier=standard` -> `tier=premium`
+- `complexity=simple` + `tier=standard` -> `tier=budget`
+
+Reference: `client/app/orchestrator.py`
 
 ## Headless Autonomous Demo
 

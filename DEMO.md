@@ -182,15 +182,17 @@ Send any message, e.g.:
 > `Explain the difference between Proof of Work and Proof of Stake consensus mechanisms.`
 
 **With 0G off** — routing is decided by local keyword matching:
-- "explain" → domain: `reasoning`, tier: standard
+- base tier stays what the user selected (for example `standard`)
 
 **With 0G on** — routing is decided by a 0G-hosted LLM:
-- 0G classifies: `{ "domain": "reasoning", "complexity": "complex", "requires_thinking": true, "confidence": 0.95 }`
-- `requires_thinking: true` → premium provider selected (e.g. Claude Opus)
+- 0G classifies: `{ "domain": "...", "complexity": "simple|moderate|complex", "requires_web_search": ..., "requires_thinking": ..., "confidence": ... }`
+- Orchestrator applies complexity-aware tier rule before `/route`:
+  - `complexity=complex` + `tier=standard` -> `premium`
+  - `complexity=simple` + `tier=standard` -> `budget`
 
 **What the demo shows:**
 - The routing panel displays `source: "0g_inference"` vs `"keyword"`
-- The same message selects a different provider tier depending on 0G on/off
+- The same base tier (`standard`) can be auto-adjusted to `premium` or `budget` depending on 0G complexity
 - All inference runs on **0G Compute Network** — decentralized, verifiable compute
 
 ---
@@ -218,6 +220,7 @@ User input
   → PII Review dialog (none / permissive / strict / user-select)
   → Keyword routing (domain + web_search flag)
   → 0G Compute inference (optional: AI-enhanced domain + complexity classification)
+  → Complexity-aware tier adjustment (standard -> premium|budget)
   → Gateway: POST /route → optimal provider selected
   → x402 USDC micro-payment on Base Sepolia
   → AI provider receives masked text only

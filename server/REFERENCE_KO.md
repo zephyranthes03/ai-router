@@ -223,6 +223,16 @@ Behavior:
 
 - x402 초기화 실패 시 서버는 경고 후 결제 검증 없는 dev 모드로 동작할 수 있습니다.
 
+### x402 v2 헤더 플로우
+
+현재 통합은 x402 v2 호환 헤더 플로우를 사용합니다:
+
+1. 유료 엔드포인트 첫 호출에서 `402` + `PAYMENT-REQUIRED`
+2. 클라이언트가 `PAYMENT-SIGNATURE`로 재요청
+3. 정산 메타데이터를 `PAYMENT-RESPONSE`로 확인
+
+브라우저 클라이언트가 헤더를 읽을 수 있도록 `server/src/index.ts`에서 CORS exposed headers를 설정합니다.
+
 ## ZK usage 경로
 
 관련 파일:
@@ -237,6 +247,15 @@ Behavior:
 - usage records는 `server/data/usage-records.json`에 저장
 - batch 크기는 32 (회로 제약과 동일)
 - proof 생성 성공 시 처리된 batch를 큐에서 제거
+
+## Complexity-Tier 자동 보정 규칙 (클라이언트 오케스트레이터)
+
+0G complexity 기반 tier 자동 보정은 클라이언트 오케스트레이터에서 적용된 뒤 `/route`로 서버에 전달됩니다:
+
+- `complexity=complex` + `tier=standard` -> `tier=premium`
+- `complexity=simple` + `tier=standard` -> `tier=budget`
+
+참고: `client/app/orchestrator.py`
 
 ## Headless Autonomous Demo
 

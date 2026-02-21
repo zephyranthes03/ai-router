@@ -134,6 +134,13 @@ class AnalysisOrchestrator:
             domain = zero_g_result.domain
             needs_web_search = self.settings.web_search or zero_g_result.requires_web_search
             needs_thinking = self.settings.extended_thinking or zero_g_result.requires_thinking
+            # Auto-upgrade/downgrade tier based on 0G complexity classification
+            if zero_g_result.complexity == "complex" and effective_tier == "standard":
+                effective_tier = "premium"
+                logger.info("[0G] Upgraded tier to premium (complexity=complex)")
+            elif zero_g_result.complexity == "simple" and effective_tier == "standard":
+                effective_tier = "budget"
+                logger.info("[0G] Downgraded tier to budget (complexity=simple)")
         else:
             domain = self.fallback_router._classify_domain(text_lower)
             needs_web_search = self.settings.web_search or self.fallback_router._needs_web_search(text_lower)

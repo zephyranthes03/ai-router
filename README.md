@@ -33,7 +33,7 @@ ProofRoute AI is a desktop AI gateway that protects sensitive prompts on-device,
 ## 1) What We Built
 
 - **Edge AI privacy layer**: Multi-signal on-device PII protection (Regex + Presidio + local LLM), with placeholder masking before cloud calls and safe post-response restoration for natural UX
-- **Adaptive AI orchestration**: Real-time model selection across Anthropic / OpenAI / DeepSeek / Gemini based on tier, speed-quality preference, domain fit, and capability needs (thinking/web-search/context), optimizing quality-per-dollar instead of static routing
+- **Adaptive AI orchestration**: Real-time model selection across Anthropic / OpenAI / DeepSeek / Gemini based on tier, speed-quality preference, domain fit, and capability needs (thinking/web-search/context), with 0G complexity-aware tier auto-adjustment (`standard -> premium` on `complex`, `standard -> budget` on `simple`)
 - **x402 micropayments**: Request-level USDC settlement on Base Sepolia
 - **ZK accountability**: Groth16 proofs bind usage stats + x402 tx hash root for on-chain verification
 - **Billing observability**: Transparent request/token/cost tracking with dashboard visibility
@@ -48,7 +48,7 @@ At the same time, typical subscription AI products force upfront monthly spend a
 ProofRoute AI's design principle:
 - Keep content private: raw input stays local and only masked content is sent
 - Pay only for what is used: x402 USDC micropayments with no mandatory subscription
-- Choose the right model per request: Adaptive AI orchestration uses tier, speed-quality preference, domain fit, and capability needs to optimize performance per dollar
+- Choose the right model per request: Adaptive AI orchestration uses tier, speed-quality preference, domain fit, and capability needs to optimize performance per dollar, including 0G complexity-aware tier auto-adjustment
 - Prove responsible usage: ZK proofs and on-chain verification keep accountability auditable
 
 This is our approach to "transparency without surveillance" and "efficiency without overpaying".
@@ -248,6 +248,16 @@ Cost control in the UI is represented by `tier` selection:
 - more cost-sensitive mode -> `budget`
 - less cost-sensitive / quality-first mode -> `standard` or `premium`
 
+### 0G Complexity Tier Adjustment (Implemented)
+
+When 0G inference is enabled, the orchestrator can auto-adjust tier before `/route`:
+
+| Base tier | 0G complexity | Applied tier |
+|---|---|---|
+| `standard` | `complex` | `premium` |
+| `standard` | `simple` | `budget` |
+| `budget` / `premium` | any | unchanged |
+
 ### ZK tx-binding scenarios
 
 | Scenario | What is verified |
@@ -257,6 +267,14 @@ Cost control in the UI is represented by `tier` selection:
 | Commitment integrity | commitment is computed as `Poseidon(totalCost, requestCount, txHashesRoot, salt)` |
 | On-chain persistence | `ProofRegistry` stores `txHashesRoot` and emits it in `ProofVerified` |
 | Groth16 compatibility | real proof generation/verification still passes with `pubSignals[4]` |
+
+### x402 v2 payment handshake
+
+The gateway and headless flow operate on x402 v2 headers:
+
+1. Initial paid endpoint call returns `402` with `PAYMENT-REQUIRED`.
+2. Client signs and retries with `PAYMENT-SIGNATURE`.
+3. Settlement metadata is returned via `PAYMENT-RESPONSE`.
 
 ---
 
@@ -279,9 +297,11 @@ Track-specific submission stories:
 ## 10) Status
 
 - x402 payment + routing pipeline operational
+- x402 v2 header-based payment flow operational (`PAYMENT-REQUIRED` / `PAYMENT-SIGNATURE` / `PAYMENT-RESPONSE`)
 - ZK circuit/proof generation pipeline operational
 - `ProofRegistry` on-chain verification tests passing
 - `tier + speed_quality_weight` routing scenario tests passing
+- 0G complexity-aware tier auto-adjustment operational (`standard -> premium|budget`)
 - Frontend flow integrated for proof generation/submission
 - Headless autonomous x402 demo script available (`server/scripts/headless-demo.ts`)
 - Base Autonomous Agents strict-mainnet requirement is tracked as a follow-up (current demo chain is Base Sepolia)
