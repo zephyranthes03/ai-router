@@ -13,8 +13,11 @@ export async function makeX402Request(
   params: X402RequestParams,
   walletClient: WalletClient
 ): Promise<AIResponse> {
-  // Build an x402Client with the EVM exact scheme registered for Base Sepolia
-  const scheme = new ExactEvmScheme(walletClient as any);
+  // ExactEvmScheme expects signer.address directly; viem WalletClient has account.address
+  const signer = Object.assign(Object.create(walletClient as any), {
+    address: (walletClient as any).account?.address,
+  });
+  const scheme = new ExactEvmScheme(signer as any);
   const client = new x402Client();
   client.register("eip155:84532", scheme as any);
 
