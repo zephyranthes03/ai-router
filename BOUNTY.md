@@ -1,4 +1,4 @@
-# AI Router — Bounty Alignment & Evidence Index
+# ProofRoute AI — Bounty Alignment & Evidence Index
 
 This document summarizes current bounty alignment and where each claim is implemented in code.
 Status snapshot date: **2026-02-21**.

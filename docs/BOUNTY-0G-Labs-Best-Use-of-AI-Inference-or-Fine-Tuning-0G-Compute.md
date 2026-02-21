@@ -1,4 +1,4 @@
-# AI Router — 0G Labs Submission: Best Use of AI Inference or Fine Tuning (0G Compute)
+# ProofRoute AI — 0G Labs Submission: Best Use of AI Inference or Fine Tuning (0G Compute)
 
 ## Requirements Mapping (Explicit)
 
@@ -58,7 +58,7 @@ For agentic workflows, routing decisions should come from live inference, not on
 
 ## Solution
 
-**AI Router** adds an optional **0G Compute Network inference step** before provider routing.
+**ProofRoute AI** adds an optional **0G Compute Network inference step** before provider routing.
 
 - It sends the user message to a 0G-hosted model (OpenAI-compatible API)
 - The model returns structured routing signals:

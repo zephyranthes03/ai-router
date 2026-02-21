@@ -1,4 +1,4 @@
-# AI Router Server
+# ProofRoute AI Server
 
 Express + TypeScript gateway for:
 

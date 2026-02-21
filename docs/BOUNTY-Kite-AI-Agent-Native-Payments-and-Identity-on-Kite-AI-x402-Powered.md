@@ -1,4 +1,4 @@
-# AI Router — Kite AI Submission: Agent-Native Payments & Identity (x402-Powered)
+# ProofRoute AI — Kite AI Submission: Agent-Native Payments & Identity (x402-Powered)
 
 ## Problem
 
@@ -6,7 +6,7 @@ AI API billing today is opaque: monthly subscriptions or prepaid credits with no
 
 ## Solution
 
-**AI Router** uses the **x402 protocol** to enable **per-request USDC micropayments** for AI inference. Every API call has a transparent, verifiable price — and every payment is cryptographically bound to a ZK proof of usage.
+**ProofRoute AI** uses the **x402 protocol** to enable **per-request USDC micropayments** for AI inference. Every API call has a transparent, verifiable price — and every payment is cryptographically bound to a ZK proof of usage.
 
 ## Requirements Mapping (as of 2026-02-21)
 
@@ -25,7 +25,7 @@ AI API billing today is opaque: monthly subscriptions or prepaid credits with no
 - **Verifiable identity/accountability linkage**: Wallet-level settlement tx hashes are captured server-side and bound into ZK commitments.
 - **No subscription lock-in**: Pay-as-you-go economics align with real usage for agent workloads.
 
-## How x402 Powers AI Router
+## How x402 Powers ProofRoute AI
 
 ### Per-Request Micropayments
 
@@ -42,7 +42,7 @@ The `x402ResourceServer` middleware intercepts each request, verifies payment, a
 
 ### Settlement Transaction Capture
 
-AI Router captures the x402 settlement transaction hash **server-side** using the `onAfterSettle` hook:
+ProofRoute AI captures the x402 settlement transaction hash **server-side** using the `onAfterSettle` hook:
 
 ```
 x402ResourceServer
@@ -76,7 +76,7 @@ This `txHashesRoot` becomes a public signal in the Groth16 proof and is stored i
 
 ## Autonomous Execution Path (No Manual Clicking)
 
-AI Router provides a headless execution path for autonomous payment flow:
+ProofRoute AI provides a headless execution path for autonomous payment flow:
 
 ```bash
 cd server

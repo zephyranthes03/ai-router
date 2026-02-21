@@ -1,4 +1,4 @@
-# AI Router — Prosperia Submission: Privacy-Preserving Accountability
+# ProofRoute AI — Prosperia Submission: Privacy-Preserving Accountability
 
 ## Problem
 
@@ -10,7 +10,7 @@ When users send sensitive queries to cloud AI (medical, legal, financial), they 
 
 ## Solution
 
-**AI Router** implements a **3-layer privacy model** that keeps content private while proving accountable usage on-chain — using zero-knowledge proofs.
+**ProofRoute AI** implements a **3-layer privacy model** that keeps content private while proving accountable usage on-chain — using zero-knowledge proofs.
 
 ## Bounty Fit
 
@@ -120,7 +120,7 @@ Anyone can verify the proof's integrity:
 
 ### Privacy-Preserving AI Accountability
 
-Traditional approaches to AI accountability require logging and auditing — which conflicts with privacy. AI Router's ZK approach provides:
+Traditional approaches to AI accountability require logging and auditing — which conflicts with privacy. ProofRoute AI's ZK approach provides:
 
 - **Compliance without surveillance**: Prove budget adherence without revealing what was asked
 - **Cryptographic binding**: Usage proof is tied to real payments, not self-reported data

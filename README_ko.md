@@ -1,4 +1,4 @@
-# AI Router | ETHDenver 2026 Submission
+# ProofRoute AI | ETHDenver 2026 Submission
 
 **Privacy-first AI access with Edge AI + x402 micropayments + ZK accountability**
 
@@ -6,14 +6,14 @@
 
 English version: `README.md`
 
-AI Router는 민감한 AI 질의를 **로컬에서 보호**하고, 비용은 **USDC 마이크로페이먼트(x402)**로 처리하며, 사용 책임성은 **ZK 증명 + 온체인 검증**으로 보여주는 데스크톱 AI 게이트웨이입니다.
+ProofRoute AI는 민감한 AI 질의를 **로컬에서 보호**하고, 비용은 **USDC 마이크로페이먼트(x402)**로 처리하며, 사용 책임성은 **ZK 증명 + 온체인 검증**으로 보여주는 데스크톱 AI 게이트웨이입니다.
 
 ---
 
 ## 60초 피치 (심사위원용)
 
 1. **문제**: 민감한 질문일수록 AI 도움이 필요하지만, 클라우드 전송은 프라이버시 리스크가 크고 구독형 과금은 비용 비효율이 발생하기 쉽습니다.
-2. **해결**: AI Router는 원문을 디바이스에 남기고 마스킹된 최소 정보만 전송하며, Adaptive AI orchestration으로 요청마다 최적 모델을 선택합니다.
+2. **해결**: ProofRoute AI는 원문을 디바이스에 남기고 마스킹된 최소 정보만 전송하며, Adaptive AI orchestration으로 요청마다 최적 모델을 선택합니다.
 3. **결제 + 책임성**: x402 USDC 마이크로결제로 구독료 없이 사용량만큼 결제하고, Groth16 ZK 증명으로 Base Sepolia에서 검증 가능한 사용 기록을 남깁니다.
 4. **결과**: 원문 노출 없이 프라이버시를 지키면서 성능/비용 효율과 공개 검증 가능성을 동시에 확보합니다.
 
@@ -45,7 +45,7 @@ AI Router는 민감한 AI 질의를 **로컬에서 보호**하고, 비용은 **U
 민감한 질문일수록 AI 도움이 필요하지만, 그대로 클라우드에 보내는 구조는 프라이버시 리스크가 큽니다.
 또한 기존 구독형 AI는 사용량이 적어도 월 구독료를 선결제해야 하고, 어떤 모델을 쓸지 사용자가 직접 판단해야 해서 비용/성능 효율이 떨어지기 쉽습니다.
 
-AI Router의 접근:
+ProofRoute AI의 접근:
 - **내용은 숨기고**: 원문은 로컬에서 처리하고 마스킹된 정보만 전송
 - **요금은 사용한 만큼만**: x402 USDC 마이크로결제로 구독료 없이 요청 단위 pay-as-you-go
 - **모델 선택은 상황에 맞게**: Adaptive AI orchestration이 tier, 속도/품질 선호, 도메인, capability를 반영해 성능 대비 비용을 최적화

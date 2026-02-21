@@ -2,7 +2,7 @@
  * ERC-8021 Builder Code Attribution
  *
  * Generates a dataSuffix to append to on-chain transaction calldata,
- * attributing on-chain activity to this AI Router application.
+ * attributing on-chain activity to this ProofRoute AI application.
  *
  * Standard: https://docs.base.org/base-chain/quickstart/builder-codes
  * Register your code at: https://base.dev Settings → Builder Code

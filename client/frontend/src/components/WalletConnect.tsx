@@ -60,7 +60,7 @@ export default function WalletConnect() {
         </span>
         <span className="text-green-400 font-mono">{shortAddr}</span>
         <span className="text-gray-400">
-          {parseFloat(wallet.usdcBalance).toFixed(2)} USDC
+          {parseFloat(wallet.usdcBalance).toFixed(4)} USDC
         </span>
         <button
           onClick={() => wallet.disconnect()}
@@ -101,7 +101,7 @@ export default function WalletConnect() {
       </span>
       <span className="text-green-400 font-mono">{shortAddr}</span>
       <span className="text-gray-400">
-        {parseFloat(wallet.usdcBalance).toFixed(2)} USDC
+        {parseFloat(wallet.usdcBalance).toFixed(4)} USDC
       </span>
       <button
         onClick={wallet.lockWallet}

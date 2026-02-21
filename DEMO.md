@@ -1,4 +1,4 @@
-# AI Router — Demo Walkthrough
+# ProofRoute AI — Demo Walkthrough
 
 **Total time: ~5 minutes**
 
@@ -18,35 +18,59 @@ Add to `server/.env`:
 HEADLESS_PRIVATE_KEY=0xYourPrivateKeyWithUsdcOnBaseSepolia
 HEADLESS_PROVIDER=haiku
 HEADLESS_GATEWAY_URL=http://localhost:3001
-HEADLESS_MESSAGE=Explain what x402 is in one sentence.
+HEADLESS_MESSAGE=Focusing on pay-as-you-go USDC AI API payments with verifiable settlement.
+
 ```
 
 ### Run
 
+> **Important:** The server must be running first (`cd server && npm run dev` in a separate terminal).
+
 ```bash
-cd server && tsx scripts/headless-demo.ts
+cd server && npx tsx scripts/headless-demo.ts
 ```
 
-### Expected Output
+### Sample Output (verified run)
 
 ```
 === Headless Autonomous x402 Demo ===
-Wallet:   0xAbCd...1234  (loaded from HEADLESS_PRIVATE_KEY — no password prompt)
-Provider: haiku ($0.001 USDC)
+Wallet:   0x46d98FE8d6dBD1A1128dCb1466E3eed0F79a8467
+Provider: haiku ($0.001 USDC per request)
 Gateway:  http://localhost:3001
 
-[1/3] Sending request → 402 received (payment required)
-[2/3] Signing TransferWithAuthorization (no browser, no clicks)...
-[3/3] Retrying with X-PAYMENT header...
+[1/3] Sending request to gateway...
+      --> 402 received (payment required)
+      Asset:   0x036CbD53842c5426634e7929541eC2318f3dCF7e
+      Amount:  1000 atomic units
+      PayTo:   0x46d98FE8d6dBD1A1128dCb1466E3eed0F79a8467
+      Network: eip155:84532
+      Scheme:  exact
 
-✓ SUCCESS
-Response: x402 is an HTTP protocol extension that enables instant micropayments...
-Tokens:   12 in / 28 out  |  Cost: $0.000021 actual / $0.001 charged
+[2/3] Signing payment authorization (no browser, no clicks)...
+      Signature: 0x3142ac7b6a6ec4eb6f...0f27c41c
+
+[3/3] Retrying with PAYMENT-SIGNATURE header...
+
+SUCCESS
+--------
+Response: x402 is a payment protocol that enables AI API providers to charge users per
+          request in USDC with cryptographic proof of settlement, eliminating trust
+          requirements and enabling truly pay-as-you-go monetization.
+Tokens:   42 in / 48 out
+Cost:     $0.000282 actual / $0.0010 charged via x402
 
 x402 Settlement:
-  TX Hash:  0xabc123def456...
-  Explorer: https://sepolia.basescan.org/tx/0xabc123def456...
+  TX Hash:  0x3dfec550f74b47f8954ea32a1fee9a656c37bb9d94e9bce1658fb7659f244964
+  Explorer: https://sepolia.basescan.org/tx/0x3dfec550f74b47f8954ea32a1fee9a656c37bb9d94e9bce1658fb7659f244964
+
+Flow summary:
+  1. POST /request/haiku        -> 402 (payment required)
+  2. signTypedData(EIP-712)     -> signature (off-chain, no gas)
+  3. POST + PAYMENT-SIGNATURE   -> 200 (facilitator settles on-chain)
+  No browser. No wallet extension. No manual clicks. Fully autonomous.
 ```
+
+> TX Hash verified on Base Sepolia: [0x3dfec5...44964](https://sepolia.basescan.org/tx/0x3dfec550f74b47f8954ea32a1fee9a656c37bb9d94e9bce1658fb7659f244964)
 
 **What this proves:**
 - Private key loaded from env → no password, no browser unlock
@@ -182,7 +206,7 @@ Send any message, e.g.:
 - Every usage record is cryptographically bound to a real USDC settlement tx
 - The AI query content is never revealed on-chain
 
-> **Note:** x402 USDC micro-payment happens automatically on every message (embedded wallet signs EIP-3009 in browser, or run `tsx scripts/headless-demo.ts` for fully autonomous no-click mode). USDC transfers appear in Base Sepolia's [USDC Token Transfers tab](https://sepolia.basescan.org/token/0x036CbD53842c5426634e7929541eC2318f3dCF7e), not the main Transactions tab (which shows ETH amounts only).
+> **Note:** x402 USDC micro-payment happens automatically on every message (embedded wallet signs EIP-3009 in browser, or run `npx tsx scripts/headless-demo.ts` for fully autonomous no-click mode). USDC transfers appear in Base Sepolia's [USDC Token Transfers tab](https://sepolia.basescan.org/token/0x036CbD53842c5426634e7929541eC2318f3dCF7e), not the main Transactions tab (which shows ETH amounts only).
 
 ---
 

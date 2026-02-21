@@ -4,17 +4,17 @@ type DemoDomain = "general" | "code" | "analysis" | "math";
 
 const DEMO_RESPONSES: Record<DemoDomain, string[]> = {
   general: [
-    "This is a demo response from the AI Router. The routing logic selected this provider based on your request metadata (domain, priority, capabilities). In production, this would be a real AI response powered by the selected model.",
-    "AI Router demo mode active. Your request was successfully routed through the smart routing pipeline. The system evaluated 8 providers across 3 tiers (budget/standard/premium) to select the optimal model for your query.",
+    "This is a demo response from ProofRoute AI. The routing logic selected this provider based on your request metadata (domain, priority, capabilities). In production, this would be a real AI response powered by the selected model.",
+    "ProofRoute AI demo mode active. Your request was successfully routed through the smart routing pipeline. The system evaluated 8 providers across 3 tiers (budget/standard/premium) to select the optimal model for your query.",
   ],
   code: [
-    "```python\n# Demo response - AI Router successfully routed your code request\ndef fibonacci(n: int) -> int:\n    \"\"\"Calculate the nth Fibonacci number.\"\"\"\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```\n\n*This is a demo response. The routing engine selected this provider for code tasks. Configure API keys in `.env` for real AI responses.*",
+    "```python\n# Demo response - ProofRoute AI successfully routed your code request\ndef fibonacci(n: int) -> int:\n    \"\"\"Calculate the nth Fibonacci number.\"\"\"\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n + 1):\n        a, b = b, a + b\n    return b\n```\n\n*This is a demo response. The routing engine selected this provider for code tasks. Configure API keys in `.env` for real AI responses.*",
   ],
   analysis: [
-    "**Demo Analysis Response**\n\nThe AI Router successfully processed your analysis request through the following pipeline:\n1. **PII Detection** - Local Llama scanned for sensitive data\n2. **Smart Routing** - Selected optimal provider based on domain + priority\n3. **x402 Payment** - USDC micropayment on Base Sepolia\n4. **ZK Proof** - Usage recorded for accountability proof\n\n*Configure API keys in `.env` for real AI-powered analysis.*",
+    "**Demo Analysis Response**\n\nProofRoute AI successfully processed your analysis request through the following pipeline:\n1. **PII Detection** - Local Llama scanned for sensitive data\n2. **Smart Routing** - Selected optimal provider based on domain + priority\n3. **x402 Payment** - USDC micropayment on Base Sepolia\n4. **ZK Proof** - Usage recorded for accountability proof\n\n*Configure API keys in `.env` for real AI-powered analysis.*",
   ],
   math: [
-    "**Demo Math Response**\n\nThe AI Router routed your math query to a reasoning-capable model.\n\nExample calculation: The integral of x² from 0 to 1 = [x³/3]₀¹ = 1/3 ≈ 0.333\n\n*This is a demo. The routing system correctly identified this as a math domain query and selected a provider with reasoning capabilities. Set up API keys for real responses.*",
+    "**Demo Math Response**\n\nProofRoute AI routed your math query to a reasoning-capable model.\n\nExample calculation: The integral of x² from 0 to 1 = [x³/3]₀¹ = 1/3 ≈ 0.333\n\n*This is a demo. The routing system correctly identified this as a math domain query and selected a provider with reasoning capabilities. Set up API keys for real responses.*",
   ],
 };
 

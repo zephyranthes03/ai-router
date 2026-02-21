@@ -1,4 +1,4 @@
-# AI Router | ETHDenver 2026 Submission
+# ProofRoute AI | ETHDenver 2026 Submission
 
 **Privacy-first AI access with Edge AI + x402 micropayments + ZK accountability**
 
@@ -6,14 +6,14 @@
 
 Korean version: `README_ko.md`
 
-AI Router is a desktop AI gateway that protects sensitive prompts on-device, pays for usage through USDC micropayments (x402), and proves accountable usage with ZK proofs verified on-chain.
+ProofRoute AI is a desktop AI gateway that protects sensitive prompts on-device, pays for usage through USDC micropayments (x402), and proves accountable usage with ZK proofs verified on-chain.
 
 ---
 
 ## 60-Second Pitch (For Judges)
 
 1. **Problem**: High-value AI use cases are often privacy-sensitive, while subscription-first pricing and manual model choice create cost/performance inefficiency.
-2. **Solution**: AI Router keeps raw input on-device, sends only masked/minimal data, and uses Adaptive AI orchestration to choose the best model per request.
+2. **Solution**: ProofRoute AI keeps raw input on-device, sends only masked/minimal data, and uses Adaptive AI orchestration to choose the best model per request.
 3. **Payment + Accountability**: x402 enables USDC pay-as-you-go (no mandatory subscription), and Groth16 proofs on Base Sepolia make usage verifiable.
 4. **Outcome**: Private, cost-efficient, and publicly auditable AI usage without exposing raw prompts.
 
@@ -26,7 +26,7 @@ AI Router is a desktop AI gateway that protects sensitive prompts on-device, pay
 | Groth16Verifier | `0xb4339750209d01002bf915b8854BEcDB89731BC2` | [Basescan](https://sepolia.basescan.org/address/0xb4339750209d01002bf915b8854BEcDB89731BC2) |
 | ProofRegistry | `0xda6a8156636a85C76C1bAdb140BFb1932F999855` | [Basescan](https://sepolia.basescan.org/address/0xda6a8156636a85C76C1bAdb140BFb1932F999855) |
 
-> After deploying, run `cd contracts && npx hardhat run scripts/deploy.ts --network baseSepolia`. The script saves `contracts/deployed-addresses.json`, auto-verifies on Basescan, and updates `client/frontend/.env.local` with `VITE_PROOF_REGISTRY_ADDRESS`.
+> **Mandatory for ZK Proof tab:** Run `cd contracts && npx hardhat run scripts/deploy.ts --network baseSepolia` once before using the ZK Proof feature. The script saves `contracts/deployed-addresses.json`, auto-verifies on Basescan, and **writes `VITE_PROOF_REGISTRY_ADDRESS` to `client/frontend/.env.local`** — without this, the ZK Proof tab cannot submit proofs on-chain.
 
 ---
 
@@ -45,7 +45,7 @@ AI Router is a desktop AI gateway that protects sensitive prompts on-device, pay
 People often need AI most for medical, legal, and financial questions, where privacy risk is the highest.
 At the same time, typical subscription AI products force upfront monthly spend and manual model choice, which can be inefficient for both cost and performance.
 
-AI Router's design principle:
+ProofRoute AI's design principle:
 - Keep content private: raw input stays local and only masked content is sent
 - Pay only for what is used: x402 USDC micropayments with no mandatory subscription
 - Choose the right model per request: Adaptive AI orchestration uses tier, speed-quality preference, domain fit, and capability needs to optimize performance per dollar

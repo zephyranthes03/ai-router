@@ -206,7 +206,7 @@ export default function App() {
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
-            <h1 className="text-lg font-semibold">AI Gateway</h1>
+            <h1 className="text-lg font-semibold">ProofRoute AI</h1>
             <nav className="flex gap-1">
               <button
                 onClick={() => setActiveTab("chat")}

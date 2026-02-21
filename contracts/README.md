@@ -1,4 +1,4 @@
-# AI Router Contracts
+# ProofRoute AI Contracts
 
 Hardhat workspace for on-chain ZK verification.
 

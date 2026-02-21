@@ -1,6 +1,6 @@
-# AI Router Client
+# ProofRoute AI Client
 
-This is the client layer of AI Router, composed of a local FastAPI service and a React/Vite web UI.
+This is the client layer of ProofRoute AI, composed of a local FastAPI service and a React/Vite web UI.
 
 Core responsibilities:
 
@@ -60,7 +60,7 @@ Main `client/frontend/.env.local` keys:
 VITE_GATEWAY_SERVER_URL=http://localhost:3001
 VITE_LOCAL_API_URL=http://localhost:8000
 VITE_PROOF_REGISTRY_ADDRESS=0x...
-VITE_BUILDER_CODE=ai-router
+VITE_BUILDER_CODE=proofroute-ai
 ```
 
 ## Run (3 terminals)

@@ -1,406 +1,281 @@
-# AI Router 서버 - 한글 레퍼런스
+# ProofRoute AI Server Reference (Korean)
 
-## 프로젝트 개요
+English version: `server/REFERENCE.md`
 
-**Privacy-First AI Gateway** (ETHDenver 2026)
+## 개요
 
-x402 USDC 마이크로페이먼트를 통한 AI 프록시 서버. 클라이언트(PyWebView + React)가 로컬에서 PII 마스킹 + 도메인 분류 후 이 서버로 전송. 서버는 "Dumb Pipe" — 결제 확인 + AI 프록시만 수행. 원본 데이터를 절대 보지 않음.
+ProofRoute AI 서버는 x402 결제 검증과 AI 프록시 실행을 담당하는 Express + TypeScript 게이트웨이입니다.
+
+핵심 역할:
+
+- `POST /request/:provider_id` 요청에 대한 x402 결제 검증/정산
+- 라우팅 추천 (`POST /route`)
+- 사용량 수집 및 ZK proof 입력 생성 (`/proof/*`)
+- 정산 tx hash와 사용량 기록 바인딩 (`onAfterSettle`)
+
+기본 체인 프로필은 `NETWORK=eip155:84532` (Base Sepolia)입니다.
 
 ## 기술 스택
 
-- **런타임**: Node.js 20+
-- **언어**: TypeScript
-- **프레임워크**: Express.js
-- **결제**: x402 프로토콜 (@x402/express, @x402/evm, @x402/core) — Base Sepolia USDC
-- **AI SDK**: @anthropic-ai/sdk, openai, @google/generative-ai
-- **검증**: Zod
+- Runtime: Node.js 20+
+- Framework: Express.js
+- Language: TypeScript
+- Validation: Zod
+- Payment: `@x402/express`, `@x402/evm`, `@x402/core`
+- Providers: Anthropic, OpenAI, DeepSeek, Gemini
+- ZK utilities: snarkjs + circom artifacts (proof generation 경로)
 
-## 프로바이더 8개 (3티어)
+## 프로바이더 카탈로그
 
-| ID | 모델명 | 모델 ID | 티어 | x402 가격 | 제공사 |
-|---|---|---|------|----------|--------|
-| haiku | Claude Haiku 4.5 | claude-haiku-4-5-20251001 | budget | $0.001 | Anthropic |
-| deepseek_v3 | DeepSeek V3.2 | deepseek-chat | budget | $0.001 | DeepSeek |
-| gemini_flash | Gemini 3 Flash | gemini-3-flash-preview | budget | $0.001 | Google |
-| claude_sonnet | Claude Sonnet 4.5 | claude-sonnet-4-5-20250929 | standard | $0.01 | Anthropic |
-| gpt5 | GPT-5.2 | gpt-5.2 | standard | $0.01 | OpenAI |
-| gemini_pro | Gemini 3 Pro | gemini-3-pro-preview | standard | $0.01 | Google |
-| deepseek_r1 | DeepSeek R1 | deepseek-reasoner | premium | $0.02 | DeepSeek |
-| claude_opus | Claude Opus 4.5 | claude-opus-4-5-20251101 | premium | $0.03 | Anthropic |
+프로바이더 맵은 `server/src/utils/pricing.ts` 기본값 + `server/data/providers.json` override로 관리됩니다.
 
-## 엔드포인트
+- 총 8개 provider id (`budget/standard/premium`)
+- `x402_price`, `capabilities`, `scores(speed/quality)` 포함
+- 서버 시작 시 `loadProviderOverrides()`로 파일 내용을 메모리에 로드
 
-| 메서드 | 엔드포인트 | 인증 | 설명 |
-|--------|----------|------|------|
-| GET | /health | 없음 | 서버 + 프로바이더 상태 체크 |
-| GET | /providers | 없음 | 8개 프로바이더 정보 (가격, 능력) |
-| POST | /estimate | 없음 | 토큰 기반 비용 추정 |
-| POST | /route | 없음 | 메타데이터 기반 최적 프로바이더 추천 |
-| POST | /request/:provider_id | x402 | AI 요청 프록시 |
+주의:
 
-## 엔드포인트 상세
+- `/providers` `PUT`으로 카탈로그를 바꿔도 x402 routeConfig는 초기화 시점 기준이므로, 결제 규칙을 정확히 반영하려면 재시작이 안전합니다.
 
-### GET /health
+## 환경 변수
 
-서버와 모든 프로바이더 상태 확인.
+`server/.env.example` 기준:
 
-응답:
+```env
+# Server
+PORT=3001
+NODE_ENV=development
+
+# x402 Payment
+RESOURCE_WALLET_ADDRESS=0xYourWalletOnBaseSepolia
+FACILITATOR_URL=https://x402.org/facilitator
+NETWORK=eip155:84532
+
+# AI Provider API Keys
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+DEEPSEEK_API_KEY=
+GEMINI_API_KEY=
+
+# Optional: headless autonomous demo
+HEADLESS_PRIVATE_KEY=
+HEADLESS_PROVIDER=haiku
+HEADLESS_GATEWAY_URL=http://localhost:3001
+HEADLESS_MESSAGE=Explain what x402 is in one sentence.
+```
+
+## API 엔드포인트
+
+| Method | Path | 설명 |
+|---|---|---|
+| `GET` | `/health` | 서버 및 provider adapter 상태 |
+| `GET` | `/providers` | provider 목록/가격/capability |
+| `PUT` | `/providers` | provider 맵 교체 + 파일 저장 |
+| `POST` | `/estimate` | 토큰 추정 기반 비용 계산 |
+| `POST` | `/route` | 메타데이터 기반 provider 추천 |
+| `POST` | `/request/:provider_id` | 실제 AI 실행(결제 경로) |
+| `POST` | `/proof/generate` | usage batch로 proof/calldata 생성 |
+| `GET` | `/proof/records` | 현재 usage batch 조회 |
+| `GET` | `/usage` | 서버 usage + txHash 조회 |
+
+## 요청/응답 스키마 핵심
+
+### POST `/estimate`
+
+Request:
+
 ```json
 {
-  "status": "ok",
-  "timestamp": "2025-02-11T10:30:00Z",
-  "providers": {
-    "anthropic": true,
-    "openai": true,
-    "deepseek": true,
-    "gemini": true
-  }
+  "provider_id": "haiku",
+  "token_estimate": 1000
 }
 ```
 
-### GET /providers
+Response:
 
-전체 프로바이더 목록, 가격, 능력 정보.
-
-응답 예시:
 ```json
 {
-  "providers": [
-    {
-      "id": "gemini_flash",
-      "model": "gemini-3-flash-preview",
-      "name": "Gemini 3 Flash",
-      "tier": "budget",
-      "x402_price": "$0.001",
-      "pricing": {
-        "input_per_1k_tokens": 0.0001,
-        "output_per_1k_tokens": 0.0004
-      },
-      "capabilities": {
-        "domains": ["code", "analysis", "writing"],
-        "extended_thinking": false,
-        "web_search": true,
-        "max_context": 1000000
-      }
-    }
-  ]
+  "provider_id": "haiku",
+  "estimated_cost_usd": 0.003,
+  "breakdown": {
+    "input_cost": 0.001,
+    "output_cost": 0.002,
+    "total": 0.003
+  },
+  "tier": "budget",
+  "x402_price": "$0.001"
 }
 ```
 
-### POST /estimate
+### POST `/route`
 
-토큰 추정값을 기반으로 비용 계산.
+Request:
 
-요청:
-```json
-{
-  "provider_id": "gemini_flash",
-  "input_tokens": 500,
-  "output_tokens": 1000
-}
-```
-
-응답:
-```json
-{
-  "provider_id": "gemini_flash",
-  "input_cost": 0.00005,
-  "output_cost": 0.0004,
-  "total_cost": 0.00045,
-  "x402_charge": 0.001
-}
-```
-
-### POST /route
-
-클라이언트의 메타데이터로 최적 프로바이더 추천. 로컬 AI가 분류한 도메인, 우선순위, 요구사항 기반.
-
-요청:
 ```json
 {
   "routing_metadata": {
-    "context_length": 500,
+    "context_length": 800,
     "domain": "code",
-    "priority": "speed",
+    "tier": "budget",
+    "speed_quality_weight": 20,
     "requires_thinking": false,
     "requires_web_search": false
   }
 }
 ```
 
-도메인 값:
-- `code` - 코드 작성/분석
-- `analysis` - 데이터/문서 분석
-- `writing` - 텍스트 생성
-- `math` - 수학 계산
-- `reasoning` - 논리적 추론
-- `simple_qa` - 간단한 질답
-- `general` - 기타
+Response:
 
-우선순위:
-- `speed` - 빠른 응답 (budget 티어 선호)
-- `quality` - 높은 정확도 (standard/premium 티어 선호)
-- `cost` - 최저 비용 (x402 가격 + 토큰 비용 최소화)
-
-응답:
 ```json
 {
-  "recommended_provider": "gemini_flash",
-  "provider_name": "Gemini 3 Flash",
+  "recommended_provider": "haiku",
+  "provider_name": "Claude Haiku 4.5",
   "x402_price": "$0.001",
-  "endpoint": "/request/gemini_flash",
-  "reasoning": "Selected Gemini 3 Flash: budget tier for speed, supports code domain"
+  "endpoint": "/request/haiku",
+  "reasoning": "Selected ...",
+  "candidates": []
 }
 ```
 
-### POST /request/:provider_id
+### POST `/request/:provider_id`
 
-선택한 프로바이더로 AI 요청 전송. x402 결제 미들웨어로 보호됨.
+Request:
 
-요청:
 ```json
 {
   "messages": [
-    {
-      "role": "user",
-      "content": "마스킹된 쿼리..."
-    }
+    { "role": "user", "content": "masked prompt" }
   ],
   "options": {
-    "max_tokens": 4096,
+    "max_tokens": 512,
     "extended_thinking": false,
-    "thinking_budget": 10000
+    "requires_web_search": false
   }
 }
 ```
 
-응답:
+Response:
+
 ```json
 {
-  "provider_id": "gemini_flash",
+  "provider_id": "haiku",
   "response": {
-    "content": "응답 텍스트...",
-    "model": "gemini-3-flash-preview",
+    "content": "answer",
+    "model": "claude-haiku-4-5-20251001",
     "usage": {
-      "input_tokens": 150,
-      "output_tokens": 320
+      "input_tokens": 120,
+      "output_tokens": 220
     }
   },
   "cost": {
-    "input_cost": 0.000015,
-    "output_cost": 0.000128,
-    "actual_total": 0.000143,
+    "input_cost": 0.00012,
+    "output_cost": 0.0011,
+    "actual_total": 0.00122,
     "charged": 0.001
+  },
+  "limits": {
+    "tier": "budget",
+    "max_output_tokens": 512,
+    "requested_max_tokens": 512,
+    "applied_max_tokens": 512
   }
 }
 ```
 
-오류 응답:
+### POST `/proof/generate`
+
+Request:
+
 ```json
 {
-  "error": "Provider request timed out",
-  "provider": "gemini_flash"
+  "budgetLimit": 0.1
 }
 ```
 
-HTTP 상태 코드:
-- 400: 알 수 없는 프로바이더
-- 429: 비율 제한 초과
-- 502: 프로바이더 인증 실패
-- 503: 프로바이더 일시 불가
-- 504: 프로바이더 요청 타임아웃
-- 500: 기타 오류
+Behavior:
 
-## 프로젝트 구조
+- 서버가 내부 usage batch(최대 32개)를 읽어 proof 생성
+- `txHashes`를 클라이언트에서 받지 않음
+- `onAfterSettle`로 수집된 `txHash`를 사용해 `txHashesRoot` 계산
 
-```
-server/src/
-├── index.ts                      # Express 진입점
-├── config/
-│   └── env.ts                    # Zod 환경변수 검증
-├── providers/
-│   ├── types.ts                  # AIRequest, AIResponse, ProviderAdapter
-│   ├── registry.ts               # 4개 어댑터 등록 + 요청 실행
-│   ├── anthropic.ts              # Claude (thinking 지원)
-│   ├── openai.ts                 # GPT-5.2
-│   ├── deepseek.ts               # DeepSeek (OpenAI SDK + baseURL)
-│   └── gemini.ts                 # Gemini
-├── routes/
-│   ├── providers.ts              # GET /providers
-│   ├── estimate.ts               # POST /estimate
-│   ├── request.ts                # POST /request/:provider_id
-│   └── route.ts                  # POST /route (라우팅 엔진)
-├── middleware/
-│   ├── x402.ts                   # x402 결제 미들웨어
-│   └── validation.ts             # Zod 스키마 검증
-└── utils/
-    ├── pricing.ts                # PROVIDERS 맵, 비용 계산
-    └── logger.ts                 # 구조화 로깅
-```
+## 라우팅 로직 (select-provider)
 
-## 환경변수 (.env)
+`server/src/routing/select-provider.ts` 기준:
 
-필수:
-```
-PORT=3001
-NODE_ENV=development
-RESOURCE_WALLET_ADDRESS=0x...          # Base Sepolia 지갑 주소
-FACILITATOR_URL=https://x402.org/facilitator
-NETWORK=eip155:84532                   # Base Sepolia
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-DEEPSEEK_API_KEY=sk-...
-GEMINI_API_KEY=AIza...
-```
+1. tier 필터
+2. capability 필터(thinking/web_search/context)
+3. 조건 불충족 시 상위 tier로 escalation
+4. 점수 계산: `speed*(1-w) + quality*w`, `w=speed_quality_weight/100`
+5. domain match bonus `+15`
+6. 최고 점수 provider 반환
 
-## 프로바이더별 SDK 차이점
+최종 후보가 없으면 `claude_sonnet` fallback을 반환합니다.
 
-| 항목 | Anthropic | OpenAI | DeepSeek | Gemini |
-|------|-----------|--------|----------|--------|
-| SDK | @anthropic-ai/sdk | openai | openai (baseURL 변경) | @google/generative-ai |
-| 입력 토큰 | `usage.input_tokens` | `usage.prompt_tokens` | `usage.prompt_tokens` | `usageMetadata.promptTokenCount` |
-| 출력 토큰 | `usage.output_tokens` | `usage.completion_tokens` | `usage.completion_tokens` | `usageMetadata.candidatesTokenCount` |
-| 컨텐츠 접근 | `content[].text` | `choices[0].message.content` | `choices[0].message.content` | `response.text()` |
-| Extended Thinking | 지원 (Opus) | 미지원 | reasoning_content로 지원 | 미지원 |
-| Web Search | 미지원 | 지원 | 미지원 | 지원 |
-| 타임아웃 | 30s / 120s (thinking) | 30s | 30s / 120s (reasoner) | 30s |
+## x402 결제 및 txHash 바인딩
 
-## 라우팅 엔진 로직 (POST /route)
+`server/src/middleware/x402.ts`:
 
-1. **능력 필터링**: 메타데이터 요구사항으로 프로바이더 필터
-   - thinking 필요 → extended_thinking 지원하는 프로바이더만
-   - web_search 필요 → web_search 지원하는 프로바이더만
-   - context_length 확인 → max_context 초과하는 프로바이더 제외
+- provider별 `POST /request/{id}`에 결제 규칙 등록
+- `x402ResourceServer.onAfterSettle`에서 settlement tx hash 수집
+- `usageCollector.patchLastTxHash(txHash)`로 최신 usage record에 주입
 
-2. **우선순위별 스코링**:
-   - **speed**: budget 티어 +100점, standard +50점. haiku +20, gemini_flash +15
-   - **quality**: premium +100점, standard +80점. extended_thinking +20
-   - **cost**: x402 가격과 토큰 비용의 역수로 계산
+주의:
 
-3. **도메인 매칭**: 도메인이 프로바이더 능력에 포함되면 +30점
+- x402 초기화 실패 시 서버는 경고 후 결제 검증 없는 dev 모드로 동작할 수 있습니다.
 
-4. **상위 선택**: 최고 스코어 프로바이더 반환
+## ZK usage 경로
 
-우선순위 없이 요청하면 기본값은 "quality".
+관련 파일:
 
-## 개발 명령어
+- `src/zk/usage-collector.ts`
+- `src/zk/proof-generator.ts`
+- `src/routes/proof.ts`
+- `src/routes/usage.ts`
+
+요약:
+
+- usage records는 `server/data/usage-records.json`에 저장
+- batch 크기는 32 (회로 제약과 동일)
+- proof 생성 성공 시 처리된 batch를 큐에서 제거
+
+## Headless Autonomous Demo
+
+수동 wallet 클릭 없이 결제 흐름을 재현:
 
 ```bash
-# 개발 서버 (hot reload)
-npm run dev
-
-# TypeScript 컴파일
-npm run build
-
-# 프로덕션 실행
-npm start
-
-# 테스트 (curl)
-curl http://localhost:3001/health
-curl http://localhost:3001/providers
-
-curl -X POST http://localhost:3001/route \
-  -H "Content-Type: application/json" \
-  -d '{
-    "routing_metadata": {
-      "domain": "code",
-      "priority": "speed"
-    }
-  }'
-
-curl -X POST http://localhost:3001/estimate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "provider_id": "gemini_flash",
-    "input_tokens": 500,
-    "output_tokens": 1000
-  }'
+cd server
+tsx scripts/headless-demo.ts
 ```
 
-## 주요 설계 결정
+필수:
 
-- **스트리밍 미지원**: x402 선불 모델과 호환 불가
-- **서버가 API 키 보유**: 클라이언트 API 키 불필요, 보안 강화
-- **요청 내용 절대 로깅 금지**: 프라이버시 보호. 메타데이터만 기록
-- **x402 Graceful Fallback**: Node 20 미만에서 결제 검증 없이 동작 (개발 모드)
-- **프로바이더별 x402 가격**: 티어별이 아닌 개별 가격 설정
-- **요청 타임아웃**: 일반 30초, thinking/reasoner 120초
+- `HEADLESS_PRIVATE_KEY`에 Base Sepolia USDC 보유 지갑 키 설정
 
-## 알려진 제한사항
+## 디렉터리 구조
 
-- **Node 16 x402 fetch 에러**: Node 20+ 필수
-- **x402 RouteConfigurationError 비동기 발생**: unhandledRejection 핸들러로 처리
-- **더미 API 키**: 실제 API 키 없으면 healthCheck false (정상)
-- **스트리밍**: 지원 안 함
+```text
+server/
+  src/
+    config/
+    middleware/
+    providers/
+    routes/
+    routing/
+    utils/
+    zk/
+  data/
+  scripts/
+```
 
-## 로깅 정책
+## 개발 명령
 
-- 메타데이터만 기록 (method, path, status, duration, timestamp)
-- 요청 컨텐츠 절대 기록 금지
-- API 키 절대 기록 금지
-- 에러 메시지는 일반화하여 기록
+```bash
+# dev server
+npm run dev
 
-## x402 통합
+# type build
+npm run build
 
-- Base Sepolia USDC 마이크로페이먼트
-- `/request/:provider_id` 엔드포인트 자동 보호
-- 동적 라우트 생성 (setupX402)
-- 타임아웃 및 오류 처리 내장
-
-## 성능 최적화
-
-- JSON 요청 크기 제한: 1MB
-- max_tokens 최대값: 16384
-- 타임아웃: 30초 (thinking 120초)
-- thinking_budget 최대값: 100000
-
-## 클라이언트 현황 (최신)
-
-클라이언트는 현재 완전히 구현된 상태로, 다음 기능들이 포함됩니다:
-
-### 프론트엔드 기술 스택
-- React 19 + Vite 6 + TailwindCSS v4
-- wagmi v2 + viem v2 (MetaMask 지갑 연동)
-- x402-fetch v1.0.0 (마이크로페이먼트)
-- TanStack React Query (데이터 패칭)
-- recharts v3 (차트/그래프)
-
-### 구현된 기능
-| 기능 | 설명 |
-|------|------|
-| **채팅 인터페이스** | 다중 AI 제공자 채팅 + x402 USDC 결제 |
-| **대화 관리** | 대화 목록 사이드바 (생성, 이름 변경, 삭제, 즐겨찾기) |
-| **PII 보호** | 실시간 PII 탐지 오버레이 (마스킹/진행 선택) |
-| **제공자 배지** | 각 응답의 AI 제공자 + 티어 정보 표시 |
-| **우선순위 전환** | 비용/속도/품질 라우팅 우선순위 토글 |
-| **대시보드** | 서버 상태, 설정 관리 |
-| **헤더 비용 표시** | 일별/주간/월별 비용 요약 + 상세보기 링크 |
-| **요금 대시보드** | 요약 카드, 기간/제공자 필터, 누적 막대 그래프, 도넛 차트, 정렬 가능한 테이블 |
-| **블록체인 이력** | Base Sepolia USDC 전송 이벤트 조회 |
-| **지갑 연결** | MetaMask 연결 + USDC 잔액 표시 |
-
-### 클라이언트 Python API (FastAPI :8000)
-| 메서드 | 엔드포인트 | 설명 |
-|--------|----------|------|
-| POST | /analyze/ | PII 탐지 + 도메인 분류 + 라우팅 |
-| GET | /health/ | Ollama + 게이트웨이 연결 상태 |
-| GET | /settings/ | 사용자 설정 조회 |
-| PUT | /settings/ | 사용자 설정 업데이트 |
-| POST | /usage/log | 사용량 기록 저장 |
-| GET | /usage/history | 사용량 이력 조회 (필터링 지원) |
-
-### 로컬 데이터 저장
-- 설정: `~/.ai-gateway/settings.json`
-- 사용 이력: `~/.ai-gateway/history.jsonl`
-- 대화 내역: 브라우저 localStorage (`ai-gateway-conversations`)
-
-## 추가 참고
-
-- **클라이언트 기술 스택**: PyWebView + React (Python 메인 + FastAPI 내장 + WebView)
-- **클라이언트 아키텍처**: Python 메인 프로세스 + FastAPI 내장 서버 + WebView UI
-- **OS 접근**: Python 네이티브 (os, subprocess, pathlib)
-- **지갑/결제**: WebView 내 MetaMask + x402-fetch (JS)
-- **Phase 4**: COSMIC 통합 → Electron/Tauri 마이그레이션 옵션
-- **해커톤 구성**: PyWebView 앱 + React UI
-- **프라이버시**: 서버는 원본 데이터를 절대 봐야 하지 않음
-- **호환성**: TypeScript strict mode, 엄격한 타입 검사
+# tests
+npm test
+```

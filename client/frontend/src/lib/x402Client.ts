@@ -3,7 +3,9 @@
  */
 
 import type { WalletClient } from "viem";
-import { wrapFetchWithPayment } from "x402-fetch";
+import { wrapFetchWithPayment } from "@x402/fetch";
+import { x402Client } from "@x402/core/client";
+import { ExactEvmScheme } from "@x402/evm";
 import type { AIResponse, X402RequestParams } from "../types";
 import { GATEWAY_SERVER_URL } from "./env";
 
@@ -11,8 +13,12 @@ export async function makeX402Request(
   params: X402RequestParams,
   walletClient: WalletClient
 ): Promise<AIResponse> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const paymentFetch = wrapFetchWithPayment(fetch, walletClient as any);
+  // Build an x402Client with the EVM exact scheme registered for Base Sepolia
+  const scheme = new ExactEvmScheme(walletClient as any);
+  const client = new x402Client();
+  client.register("eip155:84532", scheme as any);
+
+  const paymentFetch = wrapFetchWithPayment(fetch, client as any);
 
   const url = `${GATEWAY_SERVER_URL}/request/${params.provider_id}`;
 

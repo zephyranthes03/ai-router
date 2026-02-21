@@ -1,4 +1,4 @@
-# AI Router — Base Submission: Base Self-Sustaining Autonomous Agents
+# ProofRoute AI — Base Submission: Base Self-Sustaining Autonomous Agents
 
 ## Problem
 
@@ -20,7 +20,7 @@ This makes autonomous behavior difficult to trust and hard to sustain economical
 
 ## Current Solution (Live Path)
 
-**AI Router** runs an end-to-end agentic loop on Base Sepolia:
+**ProofRoute AI** runs an end-to-end agentic loop on Base Sepolia:
 
 1. Analyze request context and select the best model path
 2. Execute request-level x402 USDC settlement

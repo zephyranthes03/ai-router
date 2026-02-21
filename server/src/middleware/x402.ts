@@ -30,6 +30,9 @@ export async function setupX402(app: Express): Promise<boolean> {
         }
       });
 
+    // Fetch supported payment kinds from the facilitator
+    await resourceServer.initialize();
+
     const routeConfig: Record<string, any> = {};
     for (const [providerId, info] of Object.entries(PROVIDERS)) {
       routeConfig[`POST /request/${providerId}`] = {
@@ -46,9 +49,7 @@ export async function setupX402(app: Express): Promise<boolean> {
       };
     }
 
-    // syncFacilitatorOnStart=false: defer facilitator connection until first payment request
-    // This prevents startup failures when the facilitator is temporarily unreachable.
-    app.use(paymentMiddleware(routeConfig, resourceServer, undefined, undefined, false));
+    app.use(paymentMiddleware(routeConfig, resourceServer));
 
     logger.info(`x402 payment middleware initialized for ${Object.keys(PROVIDERS).length} providers`);
     return true;

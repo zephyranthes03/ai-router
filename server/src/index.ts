@@ -26,7 +26,9 @@ process.on("unhandledRejection", (reason: any) => {
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  exposedHeaders: ["PAYMENT-REQUIRED", "PAYMENT-RESPONSE", "X-PAYMENT-RESPONSE"],
+}));
 app.use(express.json({ limit: "1mb" }));
 
 // Request logging middleware
@@ -77,26 +79,6 @@ app.get("/health", async (_req: Request, res: Response) => {
   }
 });
 
-// Mount routes
-app.use("/providers", providersRouter);
-app.use("/estimate", estimateRouter);
-app.use("/request", requestRouter);
-app.use("/route", routeRouter);
-app.use("/proof", proofRouter);
-app.use("/usage", usageRouter);
-
-// Global error handler
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  logger.error("Unhandled error", {
-    error: err.message,
-    stack: err.stack,
-  });
-
-  res.status(500).json({
-    error: "Internal server error",
-  });
-});
-
 // Start server
 async function start() {
   try {
@@ -105,6 +87,26 @@ async function start() {
     if (!x402Enabled) {
       logger.warn("Running WITHOUT x402 payment verification (dev mode)");
     }
+
+    // Mount routes AFTER x402 middleware so payment check runs first
+    app.use("/providers", providersRouter);
+    app.use("/estimate", estimateRouter);
+    app.use("/request", requestRouter);
+    app.use("/route", routeRouter);
+    app.use("/proof", proofRouter);
+    app.use("/usage", usageRouter);
+
+    // Global error handler (must be last)
+    app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+      logger.error("Unhandled error", {
+        error: err.message,
+        stack: err.stack,
+      });
+
+      res.status(500).json({
+        error: "Internal server error",
+      });
+    });
 
     loadProviderOverrides();
     await registry.init();
