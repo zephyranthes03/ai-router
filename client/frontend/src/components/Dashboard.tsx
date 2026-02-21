@@ -48,18 +48,11 @@ export default function Dashboard({ onSettingsChange }: DashboardProps) {
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">
           System Status
         </h2>
-        <div className="grid grid-cols-2 gap-3">
-          <StatusCard
-            label="Ollama"
-            ok={health?.ollama_available ?? false}
-            detail={health?.ollama_model ?? "unknown"}
-          />
-          <StatusCard
-            label="Gateway Server"
-            ok={health?.gateway_reachable ?? false}
-            detail={health?.gateway_server ?? "unknown"}
-          />
-        </div>
+        <StatusCard
+          label="Gateway Server"
+          ok={health?.gateway_reachable ?? false}
+          detail={health?.gateway_server ?? "unknown"}
+        />
       </section>
 
       {/* Providers */}
@@ -153,65 +146,71 @@ export default function Dashboard({ onSettingsChange }: DashboardProps) {
               </div>
             </SettingRow>
 
-            {/* Ollama */}
-            <SettingRow label="Ollama (Local LLM)">
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.ollama_enabled}
-                  onChange={async (e) => {
-                    const updated = await updateSettings({
-                      ollama_enabled: e.target.checked,
-                    });
-                    setSettings(updated);
-                  }}
-                  className="rounded"
-                />
-                <span className="text-gray-300">
-                  {settings.ollama_enabled ? "Enabled" : "Disabled"}
-                </span>
-              </label>
-            </SettingRow>
-
             {/* Extended Thinking */}
             <SettingRow label="Extended Thinking">
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.extended_thinking}
-                  onChange={async (e) => {
-                    const updated = await updateSettings({
-                      extended_thinking: e.target.checked,
-                    });
-                    setSettings(updated);
-                  }}
-                  className="rounded"
-                />
-                <span className="text-gray-300">
-                  {settings.extended_thinking ? "Enabled" : "Disabled"}
-                </span>
-              </label>
+              <CheckboxToggle
+                checked={settings.extended_thinking}
+                onChange={async (val) => {
+                  setSettings({ ...settings, extended_thinking: val });
+                  const updated = await updateSettings({ extended_thinking: val });
+                  setSettings(updated);
+                }}
+              />
             </SettingRow>
 
             {/* Web Search */}
             <SettingRow label="Web Search">
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.web_search}
-                  onChange={async (e) => {
-                    const updated = await updateSettings({
-                      web_search: e.target.checked,
-                    });
+              <CheckboxToggle
+                checked={settings.web_search}
+                onChange={async (val) => {
+                  setSettings({ ...settings, web_search: val });
+                  const updated = await updateSettings({ web_search: val });
+                  setSettings(updated);
+                }}
+              />
+            </SettingRow>
+
+            {/* 0G Inference */}
+            <div className="border-t border-gray-700 pt-4 mt-2">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-200">0G Compute Inference</span>
+                <CheckboxToggle
+                  checked={settings.use_0g_inference}
+                  onChange={async (val) => {
+                    setSettings({ ...settings, use_0g_inference: val });
+                    const updated = await updateSettings({ use_0g_inference: val });
                     setSettings(updated);
                   }}
-                  className="rounded"
                 />
-                <span className="text-gray-300">
-                  {settings.web_search ? "Enabled" : "Disabled"}
-                </span>
-              </label>
-            </SettingRow>
+              </div>
+              {settings.use_0g_inference && (
+                <div className="space-y-2">
+                  <SettingRow label="API Key">
+                    <input
+                      type="password"
+                      value={settings.zero_g_api_key}
+                      placeholder="0G API key"
+                      onChange={async (e) => {
+                        const updated = await updateSettings({ zero_g_api_key: e.target.value });
+                        setSettings(updated);
+                      }}
+                      className="w-48 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm font-mono focus:outline-none focus:border-blue-500"
+                    />
+                  </SettingRow>
+                  <SettingRow label="Model">
+                    <input
+                      type="text"
+                      value={settings.zero_g_model}
+                      onChange={async (e) => {
+                        const updated = await updateSettings({ zero_g_model: e.target.value });
+                        setSettings(updated);
+                      }}
+                      className="w-48 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm font-mono focus:outline-none focus:border-blue-500"
+                    />
+                  </SettingRow>
+                </div>
+              )}
+            </div>
           </div>
         </section>
       )}
@@ -284,6 +283,26 @@ function NumberInput({
       }}
       className="w-24 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm font-mono text-right focus:outline-none focus:border-blue-500"
     />
+  );
+}
+
+function CheckboxToggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (val: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm cursor-pointer">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="rounded"
+      />
+      <span className="text-gray-300">{checked ? "Enabled" : "Disabled"}</span>
+    </label>
   );
 }
 

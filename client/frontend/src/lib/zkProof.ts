@@ -2,13 +2,14 @@
  * ZK Proof utilities for client-side proof submission and on-chain verification.
  */
 
-import type { WalletClient } from "viem";
+import { type WalletClient, encodeFunctionData } from "viem";
 import {
   PROOF_REGISTRY_ADDRESS,
   IS_PROOF_REGISTRY_CONFIGURED,
   PROOF_REGISTRY_ABI,
 } from "./contracts";
 import { GATEWAY_SERVER_URL } from "./env";
+import { BUILDER_DATA_SUFFIX } from "./builderCode";
 
 export interface ProofGenerateResponse {
   success: boolean;
@@ -119,11 +120,17 @@ export async function submitProofOnChain(
 
   const { pA, pB, pC, pubSignals } = parseCalldata(calldata);
 
-  const hash = await walletClient.writeContract({
-    address: PROOF_REGISTRY_ADDRESS,
+  // Encode calldata + append ERC-8021 builder attribution suffix
+  const encoded = encodeFunctionData({
     abi: PROOF_REGISTRY_ABI,
     functionName: "submitAndVerify",
     args: [pA, pB, pC, pubSignals],
+  });
+  const data = (encoded + BUILDER_DATA_SUFFIX.slice(2)) as `0x${string}`;
+
+  const hash = await walletClient.sendTransaction({
+    to: PROOF_REGISTRY_ADDRESS,
+    data,
     chain: walletClient.chain,
     account: walletClient.account!,
   });

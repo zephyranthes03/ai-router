@@ -1,3 +1,10 @@
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const _dir = dirname(fileURLToPath(import.meta.url));
+const PROVIDERS_FILE = join(_dir, "../../data/providers.json");
+
 export type TierName = "budget" | "standard" | "premium";
 
 /**
@@ -31,7 +38,7 @@ export interface ProviderInfo {
   scores: { speed: number; quality: number };
 }
 
-export const PROVIDERS: Record<string, ProviderInfo> = {
+export let PROVIDERS: Record<string, ProviderInfo> = {
   haiku: {
     model: "claude-haiku-4-5-20251001",
     provider: "anthropic",
@@ -136,6 +143,38 @@ export function getProvidersForTier(tier: TierName): string[] {
   return Object.entries(PROVIDERS)
     .filter(([_, info]) => info.tier === tier)
     .map(([id, _]) => id);
+}
+
+/**
+ * Load providers from data/providers.json (if it exists), overriding the defaults.
+ * Called once at server startup.
+ */
+export function loadProviderOverrides(): void {
+  const dataDir = join(_dir, "../../data");
+  mkdirSync(dataDir, { recursive: true });
+
+  if (existsSync(PROVIDERS_FILE)) {
+    try {
+      const saved = JSON.parse(readFileSync(PROVIDERS_FILE, "utf-8"));
+      PROVIDERS = saved;
+      console.log(`[providers] Loaded ${Object.keys(saved).length} providers from ${PROVIDERS_FILE}`);
+    } catch (e) {
+      console.warn("[providers] Failed to parse providers.json, using defaults:", e);
+    }
+  } else {
+    // First run — write defaults so the file is easy to find and edit
+    writeFileSync(PROVIDERS_FILE, JSON.stringify(PROVIDERS, null, 2));
+    console.log(`[providers] Created ${PROVIDERS_FILE} with defaults — edit and restart to customise`);
+  }
+}
+
+/**
+ * Replace the in-memory provider map and persist to disk.
+ */
+export function updateProviders(newProviders: Record<string, ProviderInfo>): void {
+  PROVIDERS = newProviders;
+  mkdirSync(join(_dir, "../../data"), { recursive: true });
+  writeFileSync(PROVIDERS_FILE, JSON.stringify(newProviders, null, 2));
 }
 
 /**

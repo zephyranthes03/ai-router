@@ -1,8 +1,58 @@
 # AI Router — Demo Walkthrough
 
-**Total time: ~4 minutes**
+**Total time: ~5 minutes**
 
-> **Prerequisites**: Server (`cd server && npm run dev`), Client (`cd client && python main.py`), MetaMask on Base Sepolia with USDC.
+> **Prerequisites**: Server (`cd server && npm run dev`), Frontend (`cd client/frontend && npm run dev`), Python backend (`cd client && python main.py`), MetaMask on Base Sepolia with USDC, and `client/frontend/.env.local` with `VITE_PROOF_REGISTRY_ADDRESS` set (or run `cd contracts && npx hardhat run scripts/deploy.ts --network baseSepolia` once).
+
+---
+
+## Step 0: Headless Autonomous Payment — No Clicks Required (60s)
+
+> **Demonstrates:** Fully autonomous x402 USDC payment with no browser, no MetaMask prompt, no manual interaction. This satisfies the "no manual wallet clicking" requirement.
+
+### Setup
+
+Add to `server/.env`:
+
+```bash
+HEADLESS_PRIVATE_KEY=0xYourPrivateKeyWithUsdcOnBaseSepolia
+HEADLESS_PROVIDER=haiku
+HEADLESS_GATEWAY_URL=http://localhost:3001
+HEADLESS_MESSAGE=Explain what x402 is in one sentence.
+```
+
+### Run
+
+```bash
+cd server && tsx scripts/headless-demo.ts
+```
+
+### Expected Output
+
+```
+=== Headless Autonomous x402 Demo ===
+Wallet:   0xAbCd...1234  (loaded from HEADLESS_PRIVATE_KEY — no password prompt)
+Provider: haiku ($0.001 USDC)
+Gateway:  http://localhost:3001
+
+[1/3] Sending request → 402 received (payment required)
+[2/3] Signing TransferWithAuthorization (no browser, no clicks)...
+[3/3] Retrying with X-PAYMENT header...
+
+✓ SUCCESS
+Response: x402 is an HTTP protocol extension that enables instant micropayments...
+Tokens:   12 in / 28 out  |  Cost: $0.000021 actual / $0.001 charged
+
+x402 Settlement:
+  TX Hash:  0xabc123def456...
+  Explorer: https://sepolia.basescan.org/tx/0xabc123def456...
+```
+
+**What this proves:**
+- Private key loaded from env → no password, no browser unlock
+- `signTypedData()` (EIP-3009) runs server-side with viem
+- Facilitator settles on-chain → tx appears in Base Sepolia USDC Token Transfers
+- The full loop (request → payment → AI response) runs without any user interaction
 
 ---
 
@@ -99,7 +149,29 @@ Switch tier to **Budget** — provider changes to a cheaper model automatically.
 
 ---
 
-## Step 4: ZK Proof — Privacy-Preserving Audit (90s)
+## Step 4: 0G Compute Inference — AI-Powered Routing (30s)
+
+Open **Dashboard → Settings** and enable **0G Compute Inference**. Enter your 0G API key.
+
+Send any message, e.g.:
+
+> `Explain the difference between Proof of Work and Proof of Stake consensus mechanisms.`
+
+**With 0G off** — routing is decided by local keyword matching:
+- "explain" → domain: `reasoning`, tier: standard
+
+**With 0G on** — routing is decided by a 0G-hosted LLM:
+- 0G classifies: `{ "domain": "reasoning", "complexity": "complex", "requires_thinking": true, "confidence": 0.95 }`
+- `requires_thinking: true` → premium provider selected (e.g. Claude Opus)
+
+**What the demo shows:**
+- The routing panel displays `source: "0g_inference"` vs `"keyword"`
+- The same message selects a different provider tier depending on 0G on/off
+- All inference runs on **0G Compute Network** — decentralized, verifiable compute
+
+---
+
+## Step 5: ZK Proof — Privacy-Preserving Audit (90s)
 
 1. **ZK Verification** panel → set Budget Limit (e.g. `0.05` USDC) → **Generate Proof**
 2. **Submit On-Chain** → confirm MetaMask → wait ~3s
@@ -110,7 +182,7 @@ Switch tier to **Budget** — provider changes to a cheaper model automatically.
 - Every usage record is cryptographically bound to a real USDC settlement tx
 - The AI query content is never revealed on-chain
 
-> **Note:** x402 USDC micro-payment (MetaMask prompt) happens automatically on every message sent in Steps 1–3.
+> **Note:** x402 USDC micro-payment happens automatically on every message (embedded wallet signs EIP-3009 in browser, or run `tsx scripts/headless-demo.ts` for fully autonomous no-click mode). USDC transfers appear in Base Sepolia's [USDC Token Transfers tab](https://sepolia.basescan.org/token/0x036CbD53842c5426634e7929541eC2318f3dCF7e), not the main Transactions tab (which shows ETH amounts only).
 
 ---
 
@@ -121,6 +193,7 @@ User input
   → Regex + Presidio PII scan (~10ms, local)
   → PII Review dialog (none / permissive / strict / user-select)
   → Keyword routing (domain + web_search flag)
+  → 0G Compute inference (optional: AI-enhanced domain + complexity classification)
   → Gateway: POST /route → optimal provider selected
   → x402 USDC micro-payment on Base Sepolia
   → AI provider receives masked text only

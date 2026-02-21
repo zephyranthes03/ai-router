@@ -22,6 +22,11 @@ export interface UserSettings {
   ollama_enabled: boolean;
   extended_thinking: boolean;
   web_search: boolean;
+  // 0G Compute Network inference
+  use_0g_inference: boolean;
+  zero_g_api_key: string;
+  zero_g_model: string;
+  zero_g_base_url: string;
 }
 
 /** Partial settings for update */
@@ -35,6 +40,10 @@ export interface UserSettingsUpdate {
   ollama_enabled?: boolean;
   extended_thinking?: boolean;
   web_search?: boolean;
+  use_0g_inference?: boolean;
+  zero_g_api_key?: string;
+  zero_g_model?: string;
+  zero_g_base_url?: string;
 }
 
 /** Provider from server's GET /providers */
@@ -132,12 +141,22 @@ export interface RoutingResult {
 // Analysis Response (from local FastAPI)
 // ========================
 
+export interface ZeroGResult {
+  domain: string;
+  complexity: string;
+  requires_web_search: boolean;
+  requires_thinking: boolean;
+  confidence: number;
+  model_used: string;
+}
+
 export interface AnalyzeResponse {
   masked_text: string;
   pii_report: PiiReport;
   routing: RoutingResult;
   mask_map: Record<string, string>;       // "[PLACEHOLDER]" -> original value, for unmasking AI responses
   strict_masked_text: string;             // text with ALL detections masked, for strict-mode preview in dialog
+  zero_g?: ZeroGResult;
 }
 
 // ========================

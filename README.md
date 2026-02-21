@@ -12,10 +12,10 @@ AI Router is a desktop AI gateway that protects sensitive prompts on-device, pay
 
 ## 60-Second Pitch (For Judges)
 
-1. **Problem**: Sensitive AI questions are high-value but high-risk in cloud-only workflows.
-2. **Solution**: AI Router keeps raw input local, sends only masked/minimal metadata, and routes to the best AI provider.
-3. **Accountability**: Usage is paid via x402 and proven via Groth16 proofs on Base Sepolia.
-4. **Outcome**: Private AI usage with public verifiability and no raw data disclosure.
+1. **Problem**: High-value AI use cases are often privacy-sensitive, while subscription-first pricing and manual model choice create cost/performance inefficiency.
+2. **Solution**: AI Router keeps raw input on-device, sends only masked/minimal data, and uses Adaptive AI orchestration to choose the best model per request.
+3. **Payment + Accountability**: x402 enables USDC pay-as-you-go (no mandatory subscription), and Groth16 proofs on Base Sepolia make usage verifiable.
+4. **Outcome**: Private, cost-efficient, and publicly auditable AI usage without exposing raw prompts.
 
 ---
 
@@ -23,33 +23,35 @@ AI Router is a desktop AI gateway that protects sensitive prompts on-device, pay
 
 | Contract | Address | Explorer |
 |---|---|---|
-| Groth16Verifier | `0x_VERIFIER_ADDRESS` | [Basescan](https://sepolia.basescan.org/address/0x_VERIFIER_ADDRESS) |
-| ProofRegistry | `0x_REGISTRY_ADDRESS` | [Basescan](https://sepolia.basescan.org/address/0x_REGISTRY_ADDRESS) |
+| Groth16Verifier | `0xb4339750209d01002bf915b8854BEcDB89731BC2` | [Basescan](https://sepolia.basescan.org/address/0xb4339750209d01002bf915b8854BEcDB89731BC2) |
+| ProofRegistry | `0xda6a8156636a85C76C1bAdb140BFb1932F999855` | [Basescan](https://sepolia.basescan.org/address/0xda6a8156636a85C76C1bAdb140BFb1932F999855) |
 
-> After deploying, run `cd contracts && npx hardhat run scripts/deploy.ts --network baseSepolia` to populate real addresses above. The script saves `deployed-addresses.json`, auto-verifies on Basescan, and updates `client/frontend/.env.local` with `VITE_PROOF_REGISTRY_ADDRESS`.
+> After deploying, run `cd contracts && npx hardhat run scripts/deploy.ts --network baseSepolia`. The script saves `contracts/deployed-addresses.json`, auto-verifies on Basescan, and updates `client/frontend/.env.local` with `VITE_PROOF_REGISTRY_ADDRESS`.
 
 ---
 
 ## 1) What We Built
 
-- **Edge AI privacy layer**: Local LLM + rule-based PII detection/masking
-- **Multi-provider AI routing**: Anthropic / OpenAI / DeepSeek / Gemini
-- **x402 micropayments**: Request-level USDC payments on Base Sepolia
-- **ZK accountability**: Groth16 proofs bind usage stats + x402 tx hash root, then verify on-chain
-- **Billing observability**: Request/token/cost tracking with dashboard visibility
+- **Edge AI privacy layer**: Multi-signal on-device PII protection (Regex + Presidio + local LLM), with placeholder masking before cloud calls and safe post-response restoration for natural UX
+- **Adaptive AI orchestration**: Real-time model selection across Anthropic / OpenAI / DeepSeek / Gemini based on tier, speed-quality preference, domain fit, and capability needs (thinking/web-search/context), optimizing quality-per-dollar instead of static routing
+- **x402 micropayments**: Request-level USDC settlement on Base Sepolia
+- **ZK accountability**: Groth16 proofs bind usage stats + x402 tx hash root for on-chain verification
+- **Billing observability**: Transparent request/token/cost tracking with dashboard visibility
 
 ---
 
 ## 2) Why It Matters
 
 People often need AI most for medical, legal, and financial questions, where privacy risk is the highest.
+At the same time, typical subscription AI products force upfront monthly spend and manual model choice, which can be inefficient for both cost and performance.
 
 AI Router's design principle:
-- Keep content private
-- Prove responsible usage
-- Keep payment and verification transparent
+- Keep content private: raw input stays local and only masked content is sent
+- Pay only for what is used: x402 USDC micropayments with no mandatory subscription
+- Choose the right model per request: Adaptive AI orchestration uses tier, speed-quality preference, domain fit, and capability needs to optimize performance per dollar
+- Prove responsible usage: ZK proofs and on-chain verification keep accountability auditable
 
-This is our approach to "transparency without surveillance".
+This is our approach to "transparency without surveillance" and "efficiency without overpaying".
 
 ---
 
@@ -81,7 +83,7 @@ This is our approach to "transparency without surveillance".
 4. x402 USDC payment is verified and AI response is returned
 5. Usage batch is converted into a ZK proof
 6. Proof is submitted to `ProofRegistry` on Base Sepolia
-7. On-chain `verifyProof` succeeds
+7. On-chain `submitAndVerify` succeeds and emits `ProofVerified`
 
 ---
 
@@ -110,13 +112,21 @@ Detailed component/API docs:
 - MetaMask (Base Sepolia)
 - (Optional) Docker (for circom compile alternative)
 
+### First-time local config (run once)
+
+```bash
+# Copy local env files once.
+# Re-running these commands overwrites your local settings.
+cp server/.env.example server/.env
+cp client/frontend/.env.example client/frontend/.env.local
+```
+
 ### Run local app (3 terminals)
 
 ```bash
 # Terminal 1: gateway
 cd server
 npm install
-cp .env.example .env
 npm run dev
 ```
 
@@ -124,12 +134,11 @@ npm run dev
 # Terminal 2: frontend
 cd client/frontend
 npm install
-cp .env.example .env.local
 npm run dev
 ```
 
 ```bash
-# Terminal 3: python backend + desktop
+# Terminal 3: python backend
 cd client
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
@@ -253,13 +262,17 @@ Cost control in the UI is represented by `tier` selection:
 
 ## 9) Track/Theme Fit
 
-- **Privacy-preserving AI**: Raw prompt protection + minimal data transfer
-- **On-chain accountability**: Verifiable usage without revealing content
-- **Practical UX**: End-to-end flow from routing/payment to dashboard and proof submission
+- **Primary fit (current submission focus): Kite AI**  
+  x402 payment flow + wallet-based identity + autonomous (headless) execution + open-source MIT license.
+- **Primary community fit: Prosperia**  
+  Privacy-first architecture with on-chain verifiable accountability.
+- **Additional fits:** Base Autonomous Agents and 0G Compute.
 
 Track-specific submission stories:
-- [**x402 Payment Track** → `docs/BOUNTY-x402.md`](docs/BOUNTY-x402.md)
-- [**ZK / Privacy Track** → `docs/BOUNTY-ZK-Privacy.md`](docs/BOUNTY-ZK-Privacy.md)
+- [**Kite AI — Agent-Native Payments & Identity on Kite AI (x402-Powered)** → `docs/BOUNTY-Kite-AI-Agent-Native-Payments-and-Identity-on-Kite-AI-x402-Powered.md`](docs/BOUNTY-Kite-AI-Agent-Native-Payments-and-Identity-on-Kite-AI-x402-Powered.md)
+- [**Prosperia — Privacy-Preserving Accountability** → `docs/BOUNTY-Prosperia.md`](docs/BOUNTY-Prosperia.md)
+- [**Base — Base Self-Sustaining Autonomous Agents** → `docs/BOUNTY-Base-Self-Sustaining-Autonomous-Agents.md`](docs/BOUNTY-Base-Self-Sustaining-Autonomous-Agents.md)
+- [**0G Labs — Best Use of AI Inference or Fine Tuning (0G Compute)** → `docs/BOUNTY-0G-Labs-Best-Use-of-AI-Inference-or-Fine-Tuning-0G-Compute.md`](docs/BOUNTY-0G-Labs-Best-Use-of-AI-Inference-or-Fine-Tuning-0G-Compute.md)
 
 ---
 
@@ -270,6 +283,8 @@ Track-specific submission stories:
 - `ProofRegistry` on-chain verification tests passing
 - `tier + speed_quality_weight` routing scenario tests passing
 - Frontend flow integrated for proof generation/submission
+- Headless autonomous x402 demo script available (`server/scripts/headless-demo.ts`)
+- Base Autonomous Agents strict-mainnet requirement is tracked as a follow-up (current demo chain is Base Sepolia)
 
 ---
 

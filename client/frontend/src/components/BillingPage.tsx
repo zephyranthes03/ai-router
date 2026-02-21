@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import type { Conversation, UsageFilter, UsageRecord } from "../types";
 import { useUsageData } from "../hooks/useUsageData";
+import { useServerUsage } from "../hooks/useServerUsage";
 import BillingFilters from "./billing/BillingFilters";
 import BillingChart from "./billing/BillingChart";
 import BillingTable from "./billing/BillingTable";
@@ -14,6 +15,7 @@ interface BillingPageProps {
 export default function BillingPage({ conversations }: BillingPageProps) {
   const [filter, setFilter] = useState<UsageFilter>({ period: "daily" });
   const summary = useUsageData(conversations, filter);
+  const { data: serverUsage } = useServerUsage();
 
   // Build flat UsageRecord array from conversations for the table
   const records: UsageRecord[] = useMemo(() => {
@@ -55,6 +57,52 @@ export default function BillingPage({ conversations }: BillingPageProps) {
     return filtered.sort((a, b) => b.timestamp - a.timestamp);
   }, [conversations, filter]);
 
+  // Build a map from UsageRecord.id -> txHash by matching server records to
+  // conversation records via closest timestamp + same provider (within 5 seconds).
+  const txHashMap = useMemo<Record<string, string>>(() => {
+    if (!serverUsage?.records) return {};
+    const result: Record<string, string> = {};
+    const serverWithHash = serverUsage.records.filter((r) => r.txHash);
+
+    // For each conversation record, find the closest server record by timestamp + provider
+    const allRecords: UsageRecord[] = [];
+    for (const conv of conversations) {
+      for (const msg of conv.messages) {
+        if (!msg.cost || msg.role !== "assistant") continue;
+        allRecords.push({
+          id: msg.id,
+          timestamp: msg.timestamp,
+          provider_id: msg.provider ?? "unknown",
+          provider_name: msg.provider_name ?? "Unknown",
+          tier: msg.tier ?? "unknown",
+          cost: msg.cost,
+          tokens: msg.tokens ?? { input: 0, output: 0 },
+          conversation_id: conv.id,
+        });
+      }
+    }
+
+    const used = new Set<number>(); // track which server records are already matched
+    for (const rec of allRecords) {
+      let bestIdx = -1;
+      let bestDelta = Infinity;
+      serverWithHash.forEach((sr, idx) => {
+        if (used.has(idx)) return;
+        if (sr.providerId !== rec.provider_id) return;
+        const delta = Math.abs(sr.timestamp - rec.timestamp);
+        if (delta < 5000 && delta < bestDelta) {
+          bestDelta = delta;
+          bestIdx = idx;
+        }
+      });
+      if (bestIdx >= 0) {
+        result[rec.id] = serverWithHash[bestIdx]!.txHash!;
+        used.add(bestIdx);
+      }
+    }
+    return result;
+  }, [serverUsage, conversations]);
+
   // Find most used provider
   const topProvider = useMemo(() => {
     const entries = Object.entries(summary.byProvider);
@@ -95,7 +143,7 @@ export default function BillingPage({ conversations }: BillingPageProps) {
         <div className="px-4 py-3 border-b border-gray-800">
           <h3 className="text-sm font-medium text-gray-300">Usage Records</h3>
         </div>
-        <BillingTable records={records} />
+        <BillingTable records={records} txHashMap={txHashMap} />
       </div>
 
       {/* ZK Verification */}

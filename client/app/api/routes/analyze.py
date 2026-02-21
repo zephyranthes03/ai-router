@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
+from app.llm.zero_g import ZeroGClassification
 from app.pii.patterns import PII_PATTERNS
 
 router = APIRouter()
@@ -58,12 +59,22 @@ class RoutingResponse(BaseModel):
     requires_web_search: bool = False
 
 
+class ZeroGResponse(BaseModel):
+    domain: str
+    complexity: str
+    requires_web_search: bool
+    requires_thinking: bool
+    confidence: float
+    model_used: str
+
+
 class AnalyzeResponse(BaseModel):
     masked_text: str
     pii_report: PiiReportResponse
     routing: RoutingResponse
     mask_map: dict[str, str]
     strict_masked_text: str
+    zero_g: Optional[ZeroGResponse] = None
 
 
 @router.post("/", response_model=AnalyzeResponse)
@@ -95,6 +106,18 @@ async def analyze_message(body: AnalyzeRequest, request: Request):
         body.message, result.pii_detections, "strict"
     ).masked
 
+    zero_g_resp = None
+    if result.zero_g_result is not None:
+        zg = result.zero_g_result
+        zero_g_resp = ZeroGResponse(
+            domain=zg.domain,
+            complexity=zg.complexity,
+            requires_web_search=zg.requires_web_search,
+            requires_thinking=zg.requires_thinking,
+            confidence=zg.confidence,
+            model_used=zg.model_used,
+        )
+
     return AnalyzeResponse(
         masked_text=result.masked_message,
         pii_report=PiiReportResponse(
@@ -115,4 +138,5 @@ async def analyze_message(body: AnalyzeRequest, request: Request):
         ),
         mask_map=result.mask_map,
         strict_masked_text=strict_masked_text,
+        zero_g=zero_g_resp,
     )

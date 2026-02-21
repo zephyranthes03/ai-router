@@ -10,12 +10,12 @@ AI Router는 민감한 AI 질의를 **로컬에서 보호**하고, 비용은 **U
 
 ---
 
-## 60-Second Pitch (For Judges)
+## 60초 피치 (심사위원용)
 
-1. **Problem**: People need AI most for sensitive questions, but cloud AI can expose private data.
-2. **Solution**: AI Router keeps raw input on-device, sends only masked/minimal data, and routes requests to the best model.
-3. **Accountability**: Usage is paid via x402 (USDC) and proven with Groth16 ZK proofs verified on Base Sepolia.
-4. **Outcome**: Privacy is preserved while responsible AI usage remains publicly verifiable.
+1. **문제**: 민감한 질문일수록 AI 도움이 필요하지만, 클라우드 전송은 프라이버시 리스크가 크고 구독형 과금은 비용 비효율이 발생하기 쉽습니다.
+2. **해결**: AI Router는 원문을 디바이스에 남기고 마스킹된 최소 정보만 전송하며, Adaptive AI orchestration으로 요청마다 최적 모델을 선택합니다.
+3. **결제 + 책임성**: x402 USDC 마이크로결제로 구독료 없이 사용량만큼 결제하고, Groth16 ZK 증명으로 Base Sepolia에서 검증 가능한 사용 기록을 남깁니다.
+4. **결과**: 원문 노출 없이 프라이버시를 지키면서 성능/비용 효율과 공개 검증 가능성을 동시에 확보합니다.
 
 ---
 
@@ -23,33 +23,35 @@ AI Router는 민감한 AI 질의를 **로컬에서 보호**하고, 비용은 **U
 
 | 컨트랙트 | 주소 | 탐색기 |
 |---|---|---|
-| Groth16Verifier | `0x_VERIFIER_ADDRESS` | [Basescan](https://sepolia.basescan.org/address/0x_VERIFIER_ADDRESS) |
-| ProofRegistry | `0x_REGISTRY_ADDRESS` | [Basescan](https://sepolia.basescan.org/address/0x_REGISTRY_ADDRESS) |
+| Groth16Verifier | `0xb4339750209d01002bf915b8854BEcDB89731BC2` | [Basescan](https://sepolia.basescan.org/address/0xb4339750209d01002bf915b8854BEcDB89731BC2) |
+| ProofRegistry | `0xda6a8156636a85C76C1bAdb140BFb1932F999855` | [Basescan](https://sepolia.basescan.org/address/0xda6a8156636a85C76C1bAdb140BFb1932F999855) |
 
-> 배포 후 `cd contracts && npx hardhat run scripts/deploy.ts --network baseSepolia`을 실행하면 실제 주소가 반영됩니다. 스크립트가 `deployed-addresses.json`을 저장하고 Basescan에 자동 인증합니다.
+> 배포 후 `cd contracts && npx hardhat run scripts/deploy.ts --network baseSepolia`을 실행하세요. 스크립트가 `contracts/deployed-addresses.json`을 저장하고, Basescan 자동 인증 후 `client/frontend/.env.local`의 `VITE_PROOF_REGISTRY_ADDRESS`를 업데이트합니다.
 
 ---
 
 ## 1) What We Built
 
-- **Edge AI privacy layer**: 로컬 LLM + 규칙 기반 PII 탐지/마스킹
-- **Multi-provider AI routing**: Anthropic / OpenAI / DeepSeek / Gemini 자동 라우팅
-- **x402 micropayments**: Base Sepolia USDC 기반 요청 단위 결제
-- **ZK accountability**: 사용량 + x402 tx hash root를 함께 증명(Groth16)하고 스마트 컨트랙트에서 검증
-- **Billing observability**: 요청/토큰/비용 추적 및 대시보드 시각화
+- **Edge AI privacy layer**: Regex + Presidio + 로컬 LLM 기반의 디바이스 내 다중 신호 PII 보호, 클라우드 전송 전 플레이스홀더 마스킹 + 응답 후 안전 복원으로 UX 유지
+- **Adaptive AI orchestration**: Anthropic / OpenAI / DeepSeek / Gemini를 대상으로, tier·속도/품질 선호·도메인 적합도·필수 capability(extended thinking/web search/context)에 따라 실시간으로 모델을 선택해 정적 라우팅보다 품질 대비 비용 효율을 최적화
+- **x402 micropayments**: Base Sepolia USDC 기반 요청 단위 결제/정산
+- **ZK accountability**: 사용량 + x402 tx hash root를 함께 증명(Groth16)하고 온체인에서 검증
+- **Billing observability**: 요청/토큰/비용을 투명하게 추적하고 대시보드로 가시화
 
 ---
 
 ## 2) Why It Matters
 
 민감한 질문일수록 AI 도움이 필요하지만, 그대로 클라우드에 보내는 구조는 프라이버시 리스크가 큽니다.
+또한 기존 구독형 AI는 사용량이 적어도 월 구독료를 선결제해야 하고, 어떤 모델을 쓸지 사용자가 직접 판단해야 해서 비용/성능 효율이 떨어지기 쉽습니다.
 
 AI Router의 접근:
-- **내용은 숨기고**
-- **사용 책임은 증명**
-- **비용은 투명하게 결제/검증**
+- **내용은 숨기고**: 원문은 로컬에서 처리하고 마스킹된 정보만 전송
+- **요금은 사용한 만큼만**: x402 USDC 마이크로결제로 구독료 없이 요청 단위 pay-as-you-go
+- **모델 선택은 상황에 맞게**: Adaptive AI orchestration이 tier, 속도/품질 선호, 도메인, capability를 반영해 성능 대비 비용을 최적화
+- **사용 책임은 증명**: ZK 증명과 온체인 검증으로 결과를 검증 가능하게 유지
 
-즉, "감시 없는 투명성"을 목표로 합니다.
+즉, "감시 없는 투명성"과 "낭비 없는 AI 비용 구조"를 함께 목표로 합니다.
 
 ---
 
@@ -81,7 +83,7 @@ AI Router의 접근:
 4. x402 USDC 결제 후 AI 응답 수신
 5. 사용량 배치를 기반으로 ZK proof 생성
 6. Base Sepolia `ProofRegistry`에 proof 제출
-7. 온체인에서 `verifyProof` 성공 확인
+7. 온체인에서 `submitAndVerify` 성공 및 `ProofVerified` 이벤트 확인
 
 ---
 
@@ -110,13 +112,21 @@ AI Router의 접근:
 - MetaMask (Base Sepolia)
 - (선택) Docker (circom 대체 실행)
 
+### 최초 로컬 설정 (1회 실행)
+
+```bash
+# 로컬 env 파일은 최초 1회만 복사하세요.
+# 이 명령을 반복 실행하면 기존 로컬 설정이 덮어써질 수 있습니다.
+cp server/.env.example server/.env
+cp client/frontend/.env.example client/frontend/.env.local
+```
+
 ### Run local app (3 terminals)
 
 ```bash
 # Terminal 1: gateway
 cd server
 npm install
-cp .env.example .env
 npm run dev
 ```
 
@@ -124,16 +134,14 @@ npm run dev
 # Terminal 2: frontend
 cd client/frontend
 npm install
-cp .env.example .env.local
 npm run dev
 ```
 
 ```bash
-# Terminal 3: python backend + desktop
+# Terminal 3: python backend
 cd client
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
 DEV=1 python main.py
 ```
 
@@ -264,13 +272,17 @@ UI에서 비용 제어는 `tier` 선택으로 표현됩니다.
 
 ## 9) Track/Theme Fit
 
-- **Privacy-preserving AI**: 원문 보호 + 최소 전송
-- **On-chain accountability**: 데이터 공개 없이 사용 증명
-- **Practical UX**: 실제 결제/라우팅/대시보드까지 end-to-end 연결
+- **주요 제출 포커스: Kite AI**  
+  x402 결제 플로우 + 지갑 기반 에이전트 아이덴티티 + 헤드리스 자율 실행 + MIT 오픈소스 라이선스.
+- **핵심 커뮤니티 적합성: Prosperia**  
+  프라이버시 우선 구조와 온체인 검증 가능한 책임성.
+- **추가 적합성:** Base Autonomous Agents, 0G Compute.
 
 트랙별 제출 스토리:
-- [**x402 Payment Track** → `docs/BOUNTY-x402.md`](docs/BOUNTY-x402.md)
-- [**ZK / Privacy Track** → `docs/BOUNTY-ZK-Privacy.md`](docs/BOUNTY-ZK-Privacy.md)
+- [**Kite AI — Agent-Native Payments & Identity on Kite AI (x402-Powered)** → `docs/BOUNTY-Kite-AI-Agent-Native-Payments-and-Identity-on-Kite-AI-x402-Powered.md`](docs/BOUNTY-Kite-AI-Agent-Native-Payments-and-Identity-on-Kite-AI-x402-Powered.md)
+- [**Prosperia — Privacy-Preserving Accountability** → `docs/BOUNTY-Prosperia.md`](docs/BOUNTY-Prosperia.md)
+- [**Base — Base Self-Sustaining Autonomous Agents** → `docs/BOUNTY-Base-Self-Sustaining-Autonomous-Agents.md`](docs/BOUNTY-Base-Self-Sustaining-Autonomous-Agents.md)
+- [**0G Labs — Best Use of AI Inference or Fine Tuning (0G Compute)** → `docs/BOUNTY-0G-Labs-Best-Use-of-AI-Inference-or-Fine-Tuning-0G-Compute.md`](docs/BOUNTY-0G-Labs-Best-Use-of-AI-Inference-or-Fine-Tuning-0G-Compute.md)
 
 ---
 
@@ -281,6 +293,8 @@ UI에서 비용 제어는 `tier` 선택으로 표현됩니다.
 - `ProofRegistry` 온체인 검증 테스트 통과
 - `tier + speed_quality_weight` 라우팅 시나리오 테스트 통과
 - 프런트엔드에서 proof 생성/제출 UI 연동
+- 헤드리스 자율 x402 데모 스크립트 제공 (`server/scripts/headless-demo.ts`)
+- Base Autonomous Agents의 strict-mainnet 요구사항은 후속 작업으로 관리 중 (현재 데모 체인은 Base Sepolia)
 
 ---
 

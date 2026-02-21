@@ -6,7 +6,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel
 
-from app.config.constants import DATA_DIR, SETTINGS_FILE, GATEWAY_SERVER_URL, OLLAMA_URL, OLLAMA_MODEL
+from app.config.constants import DATA_DIR, SETTINGS_FILE, GATEWAY_SERVER_URL, OLLAMA_URL, OLLAMA_MODEL, ZERO_G_BASE_URL, ZERO_G_DEFAULT_MODEL
 
 
 class UserSettings(BaseModel):
@@ -24,6 +24,11 @@ class UserSettings(BaseModel):
     server_url: str = GATEWAY_SERVER_URL
     ollama_url: str = OLLAMA_URL
     ollama_model: str = OLLAMA_MODEL
+    # 0G Compute Network inference
+    use_0g_inference: bool = False
+    zero_g_api_key: str = ""
+    zero_g_model: str = ZERO_G_DEFAULT_MODEL
+    zero_g_base_url: str = ZERO_G_BASE_URL
 
     def save(self) -> None:
         """Persist settings to disk."""
@@ -58,6 +63,10 @@ class UserSettingsUpdate(BaseModel):
     extended_thinking: Optional[bool] = None
     web_search: Optional[bool] = None
     server_url: Optional[str] = None
+    use_0g_inference: Optional[bool] = None
+    zero_g_api_key: Optional[str] = None
+    zero_g_model: Optional[str] = None
+    zero_g_base_url: Optional[str] = None
 
 
 def load_settings() -> UserSettings:

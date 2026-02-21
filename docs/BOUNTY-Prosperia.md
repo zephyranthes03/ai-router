@@ -1,4 +1,4 @@
-# AI Router — ZK / Privacy Track Submission
+# AI Router — Prosperia Submission: Privacy-Preserving Accountability
 
 ## Problem
 
@@ -12,14 +12,23 @@ When users send sensitive queries to cloud AI (medical, legal, financial), they 
 
 **AI Router** implements a **3-layer privacy model** that keeps content private while proving accountable usage on-chain — using zero-knowledge proofs.
 
+## Bounty Fit
+
+This project aligns with **Prosperia** because it focuses on:
+
+- **Practical privacy by default**: sensitive prompt content is masked locally before any cloud call
+- **Transparency without surveillance**: on-chain verifiability through ZK commitments, without exposing raw prompts
+- **User-aligned economics**: x402 pay-as-you-go avoids subscription lock-in and reduces overpayment
+- **Public-good style accountability**: third parties can audit payment/proof integrity from public chain data
+
 ## 3-Layer Privacy Architecture
 
 ### Layer 1: Local (Private)
 
-- Edge AI runs on-device for PII detection and masking
+- Edge AI runs on-device for PII detection and masking (Regex + Presidio + local LLM signals)
 - Raw prompts never leave the user's machine
 - Rule-based + local LLM classification identifies sensitive content
-- Only masked/anonymized text is forwarded to the gateway
+- Only masked/anonymized text is forwarded to the gateway, then safely restored for end-user readability in the UI
 
 ### Layer 2: Gateway (Minimal Exposure)
 
@@ -156,4 +165,6 @@ Traditional approaches to AI accountability require logging and auditing — whi
 
 - [3-Minute Demo Guide](../DEMO.md)
 - [Main README](../README.md)
-- [x402 Payment Track Submission](BOUNTY-x402.md)
+- [Kite AI Submission Story (x402-Powered)](BOUNTY-Kite-AI-Agent-Native-Payments-and-Identity-on-Kite-AI-x402-Powered.md)
+- [0G Labs Submission Story](BOUNTY-0G-Labs-Best-Use-of-AI-Inference-or-Fine-Tuning-0G-Compute.md)
+- [Base Submission Story (Self-Sustaining Autonomous Agents)](BOUNTY-Base-Self-Sustaining-Autonomous-Agents.md)

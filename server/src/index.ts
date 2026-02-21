@@ -6,10 +6,12 @@ import { logger } from "./utils/logger.js";
 import { setupX402 } from "./middleware/x402.js";
 import { registry } from "./providers/registry.js";
 import providersRouter from "./routes/providers.js";
+import { loadProviderOverrides } from "./utils/pricing.js";
 import estimateRouter from "./routes/estimate.js";
 import requestRouter from "./routes/request.js";
 import routeRouter from "./routes/route.js";
 import proofRouter from "./routes/proof.js";
+import usageRouter from "./routes/usage.js";
 
 // Handle x402 library's deferred async errors gracefully (requires Node 20+ for full functionality)
 process.on("unhandledRejection", (reason: any) => {
@@ -81,6 +83,7 @@ app.use("/estimate", estimateRouter);
 app.use("/request", requestRouter);
 app.use("/route", routeRouter);
 app.use("/proof", proofRouter);
+app.use("/usage", usageRouter);
 
 // Global error handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
@@ -103,6 +106,7 @@ async function start() {
       logger.warn("Running WITHOUT x402 payment verification (dev mode)");
     }
 
+    loadProviderOverrides();
     await registry.init();
     logger.info("Provider registry initialized");
 

@@ -19,3 +19,7 @@ HISTORY_FILE = DATA_DIR / "history.jsonl"
 
 # Blockchain
 BASE_SEPOLIA_CHAIN_ID = 84532
+
+# 0G Compute Network inference
+ZERO_G_BASE_URL = "https://api.0g.ai/v1"
+ZERO_G_DEFAULT_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct"

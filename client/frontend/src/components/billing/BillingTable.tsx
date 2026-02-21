@@ -3,6 +3,8 @@ import type { UsageRecord } from "../../types";
 
 interface BillingTableProps {
   records: UsageRecord[];
+  /** Map from UsageRecord.id to x402 payment tx hash (from server /usage endpoint) */
+  txHashMap?: Record<string, string>;
 }
 
 type SortKey = "timestamp" | "provider_name" | "tier" | "tokens_in" | "tokens_out" | "input_cost" | "output_cost" | "actual_total" | "charged";
@@ -29,7 +31,7 @@ function formatTime(ts: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-export default function BillingTable({ records }: BillingTableProps) {
+export default function BillingTable({ records, txHashMap = {} }: BillingTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("timestamp");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(0);
@@ -88,6 +90,7 @@ export default function BillingTable({ records }: BillingTableProps) {
               <th className={headerClass} onClick={() => handleSort("output_cost")}>Output Cost{arrow("output_cost")}</th>
               <th className={headerClass} onClick={() => handleSort("actual_total")}>Total{arrow("actual_total")}</th>
               <th className={headerClass} onClick={() => handleSort("charged")}>Charged{arrow("charged")}</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">Tx Hash</th>
             </tr>
           </thead>
           <tbody>
@@ -113,6 +116,20 @@ export default function BillingTable({ records }: BillingTableProps) {
                 <td className="px-3 py-2 font-mono text-gray-400">${rec.cost.output_cost.toFixed(4)}</td>
                 <td className="px-3 py-2 font-mono text-yellow-400">${rec.cost.actual_total.toFixed(4)}</td>
                 <td className="px-3 py-2 font-mono text-green-400">${rec.cost.charged.toFixed(4)}</td>
+                <td className="px-3 py-2">
+                  {txHashMap[rec.id] ? (
+                    <a
+                      href={`https://sepolia.basescan.org/tx/${txHashMap[rec.id]}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 text-xs font-mono"
+                    >
+                      {txHashMap[rec.id]!.slice(0, 10)}...{txHashMap[rec.id]!.slice(-8)} ↗
+                    </a>
+                  ) : (
+                    <span className="text-gray-600 text-xs">—</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

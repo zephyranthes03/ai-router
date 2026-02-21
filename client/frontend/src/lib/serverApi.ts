@@ -1,6 +1,6 @@
 /**
  * HTTP client for the remote gateway server.
- * Handles: providers, estimate, route.
+ * Handles: providers, estimate, route, usage.
  */
 
 import type {
@@ -10,6 +10,30 @@ import type {
   RoutingMetadata,
 } from "../types";
 import { GATEWAY_SERVER_URL } from "./env";
+
+export interface ServerUsageRecord {
+  providerId: string;
+  cost: number;
+  timestamp: number;
+  inputTokens: number;
+  outputTokens: number;
+  txHash: string | null;
+}
+
+export interface ServerUsageResponse {
+  records: ServerUsageRecord[];
+  stats: {
+    count: number;
+    totalCost: number;
+    totalTokens: number;
+  };
+}
+
+export async function getServerUsage(): Promise<ServerUsageResponse> {
+  const resp = await fetch(`${GATEWAY_SERVER_URL}/usage`);
+  if (!resp.ok) throw new Error(`Failed to fetch usage records: ${resp.status}`);
+  return resp.json();
+}
 
 export async function getProviders(): Promise<Provider[]> {
   const resp = await fetch(`${GATEWAY_SERVER_URL}/providers`);

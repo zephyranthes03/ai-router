@@ -8,6 +8,7 @@ import httpx
 
 from app.config.constants import GATEWAY_SERVER_URL
 from app.config.settings import UserSettings
+from app.llm.zero_g import ZeroGInferenceAdapter, ZeroGClassification
 from app.pii.presidio_layer import PresidioScanner
 from app.pii.regex_layer import RegexPiiScanner
 from app.pii.strategies import PiiDetection
@@ -28,6 +29,7 @@ class AnalysisResult:
     mask_map: dict[str, str]
     routing: RoutingResult
     analysis_source: str  # "presidio" | "regex"
+    zero_g_result: Optional[ZeroGClassification] = None
 
 
 def merge_detections(
@@ -75,6 +77,13 @@ class AnalysisOrchestrator:
         )
         self.fallback_router = FallbackRouter()
         self.settings = settings
+        self._zero_g: Optional[ZeroGInferenceAdapter] = None
+        if settings.use_0g_inference and settings.zero_g_api_key:
+            self._zero_g = ZeroGInferenceAdapter(
+                api_key=settings.zero_g_api_key,
+                model=settings.zero_g_model,
+                base_url=settings.zero_g_base_url,
+            )
 
     async def analyze(
         self,
@@ -105,18 +114,36 @@ class AnalysisOrchestrator:
             user_message, all_pii, self.settings.pii_mode
         )
 
-        # Step 5: Keyword-based routing classification (instant)
+        # Step 4 (optional): 0G Compute Network inference for enhanced classification
+        zero_g_result: Optional[ZeroGClassification] = None
+        if self._zero_g is not None:
+            zero_g_result = await self._zero_g.classify(user_message)
+            if zero_g_result is not None:
+                logger.info(
+                    "[0G] Classification: domain=%s complexity=%s web=%s thinking=%s confidence=%.2f",
+                    zero_g_result.domain,
+                    zero_g_result.complexity,
+                    zero_g_result.requires_web_search,
+                    zero_g_result.requires_thinking,
+                    zero_g_result.confidence,
+                )
+
+        # Step 5: Routing classification — use 0G result if available, else keyword-based
         text_lower = user_message.lower()
-        domain = self.fallback_router._classify_domain(text_lower)
-        needs_web_search = self.settings.web_search or self.fallback_router._needs_web_search(
-            text_lower
-        )
+        if zero_g_result is not None:
+            domain = zero_g_result.domain
+            needs_web_search = self.settings.web_search or zero_g_result.requires_web_search
+            needs_thinking = self.settings.extended_thinking or zero_g_result.requires_thinking
+        else:
+            domain = self.fallback_router._classify_domain(text_lower)
+            needs_web_search = self.settings.web_search or self.fallback_router._needs_web_search(text_lower)
+            needs_thinking = self.settings.extended_thinking
 
         routing_metadata = RoutingMetadata(
             domain=domain,
             tier=effective_tier,
             speed_quality_weight=effective_sqw,
-            requires_thinking=self.settings.extended_thinking,
+            requires_thinking=needs_thinking,
             requires_web_search=needs_web_search,
             context_length=len(user_message.split()),
         )
@@ -147,4 +174,5 @@ class AnalysisOrchestrator:
             mask_map=masked.mask_map,
             routing=routing,
             analysis_source=analysis_source,
+            zero_g_result=zero_g_result,
         )
