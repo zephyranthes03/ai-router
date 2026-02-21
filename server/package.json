@@ -1,0 +1,33 @@
+{
+  "name": "ai-gateway-server",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --exec tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "tsx --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@google/generative-ai": "^0.24.1",
+    "@x402/core": "latest",
+    "@x402/evm": "latest",
+    "@x402/express": "latest",
+    "circomlibjs": "^0.1.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "openai": "^4.77.0",
+    "snarkjs": "^0.7.6",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "nodemon": "^3.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

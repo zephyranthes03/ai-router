@@ -1,0 +1,14 @@
+{
+  "network": "baseSepolia",
+  "chainId": 84532,
+  "deployer": "0x46d98FE8d6dBD1A1128dCb1466E3eed0F79a8467",
+  "timestamp": "2026-02-21T04:42:07.092Z",
+  "contracts": {
+    "Groth16Verifier": "0xb4339750209d01002bf915b8854BEcDB89731BC2",
+    "ProofRegistry": "0xda6a8156636a85C76C1bAdb140BFb1932F999855"
+  },
+  "explorer": {
+    "Groth16Verifier": "https://sepolia.basescan.org/address/0xb4339750209d01002bf915b8854BEcDB89731BC2",
+    "ProofRegistry": "https://sepolia.basescan.org/address/0xda6a8156636a85C76C1bAdb140BFb1932F999855"
+  }
+}

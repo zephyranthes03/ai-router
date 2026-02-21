@@ -1,0 +1,35 @@
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Local tool state
+.claude/
+.omc/
+server/.omc/
+
+# Dependencies
+**/node_modules/
+**/venv/
+client/venv/
+
+# Build/cache artifacts
+**/dist/
+**/build/
+**/coverage/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+contracts/artifacts/
+contracts/cache/
+*.tsbuildinfo
+
+# Runtime/log data
+*.log
+data/
+
+# Secrets
+**/.env
+**/.env.local
+**/.env.*.local

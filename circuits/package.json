@@ -1,0 +1,15 @@
+{
+  "name": "ai-router-zk-circuits",
+  "version": "1.0.0",
+  "description": "ZK circuits for AI Router - UsageBudgetProof (circom + snarkjs)",
+  "scripts": {
+    "compile": "bash scripts/compile.sh",
+    "setup": "bash scripts/setup.sh",
+    "generate-verifier": "bash scripts/generate-verifier.sh",
+    "build": "npm run compile && npm run setup && npm run generate-verifier"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5",
+    "snarkjs": "^0.7.5"
+  }
+}

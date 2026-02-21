@@ -1,0 +1,24 @@
+{
+  "name": "ai-router-contracts",
+  "version": "1.0.0",
+  "description": "ZK Proof Registry smart contracts for AI Router (Base Sepolia)",
+  "scripts": {
+    "compile": "if [ -x /opt/homebrew/opt/node@22/bin/node ]; then export PATH=\"/opt/homebrew/opt/node@22/bin:$PATH\"; fi; hardhat compile",
+    "test": "if [ -x /opt/homebrew/opt/node@22/bin/node ]; then export PATH=\"/opt/homebrew/opt/node@22/bin:$PATH\"; fi; hardhat test",
+    "deploy:local": "if [ -x /opt/homebrew/opt/node@22/bin/node ]; then export PATH=\"/opt/homebrew/opt/node@22/bin:$PATH\"; fi; hardhat run scripts/deploy.ts",
+    "deploy:base-sepolia": "if [ -x /opt/homebrew/opt/node@22/bin/node ]; then export PATH=\"/opt/homebrew/opt/node@22/bin:$PATH\"; fi; hardhat run scripts/deploy.ts --network baseSepolia",
+    "verify": "if [ -x /opt/homebrew/opt/node@22/bin/node ]; then export PATH=\"/opt/homebrew/opt/node@22/bin:$PATH\"; fi; hardhat verify --network baseSepolia"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "circomlibjs": "^0.1.7",
+    "hardhat": "^2.22.0",
+    "snarkjs": "^0.7.6",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
+  }
+}
