@@ -4,7 +4,7 @@
 
 > "Everyone deserves private access to AI."
 
-Korean version: `README_ko.md`
+[Korean README](README_ko.md)
 
 ProofRoute AI is a desktop AI gateway that protects sensitive prompts on-device, pays for usage through USDC micropayments (x402), and proves accountable usage with ZK proofs verified on-chain.
 
@@ -323,7 +323,8 @@ The local LLM (currently used for PII masking) can further optimize cloud routin
 
 ETHDenver 2026 Hackathon submission project.
 
-For detailed implementation docs:
-- `README_ko.md` (Korean version)
-- `server/README.md`
-- `client/README.md`
+Implementation guides are available for the [TypeScript gateway](server/README.md) and [Python client](client/README.md).
+
+## License
+
+The project uses the [MIT License](LICENSE).
